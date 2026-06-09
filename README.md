@@ -26,15 +26,14 @@
 │           ├── index.js
 │           └── [id].js
 ├── wrangler.toml
-├── server.js              # 本地 Node 测试备用
-├── package.json           # 本地 Node 测试备用
+├── package.json
 ├── .gitignore
 └── README.md
 ```
 
 ## Cloudflare 部署方式
 
-这个项目现在推荐使用：
+这个项目推荐使用：
 
 ```text
 前端：Cloudflare Pages
@@ -44,22 +43,20 @@
 
 图片会被前端压缩为较小的 JPG，然后以 Base64/Data URL 的形式存入 D1。
 
-这种方案的优点是：
+## 重要：项目不能是纯静态模式
+
+如果 Cloudflare 后台显示你的项目是纯静态项目，并且看不到 D1 绑定入口，通常需要重新创建 Pages 项目，并选择 GitHub 仓库部署。
+
+创建 Pages 项目时请这样填：
 
 ```text
-不需要 R2
-不需要信用卡
-部署简单
-网页端可以直接上传照片
+Framework preset: None
+Build command: npm run build
+Build output directory: /
+Root directory: /
 ```
 
-缺点是：
-
-```text
-不适合存很多高清大图
-更适合小规模作品展示
-建议每张图控制在 900KB 以内
-```
+项目根目录里有 `functions/` 目录时，Cloudflare Pages 才会启用 Pages Functions。
 
 ## 创建 D1 数据库
 
@@ -110,14 +107,6 @@ GET /api/photos
 DELETE /api/photos/:id
 ```
 
-不再需要：
-
-```text
-PHOTO_BUCKET
-R2
-/api/photo-file
-```
-
 ## 上传照片
 
 在网页的「生成照片 / 作品墙」区域：
@@ -151,23 +140,6 @@ const games = [
     url: "你的小游戏链接"
   }
 ];
-```
-
-## 本地 Node 测试备用
-
-仓库里仍保留了 `server.js` 和 `package.json`，只是备用方案。Cloudflare 部署时主要使用 `functions/` 和 D1。
-
-本地 Node 运行：
-
-```bash
-npm install
-npm start
-```
-
-打开：
-
-```text
-http://localhost:3000
 ```
 
 ## 注意
