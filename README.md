@@ -43,18 +43,24 @@
 
 图片会被前端压缩为较小的 JPG，然后以 Base64/Data URL 的形式存入 D1。
 
-## 重要：项目不能是纯静态模式
+## Cloudflare Pages 构建配置
 
-如果 Cloudflare 后台显示你的项目是纯静态项目，并且看不到 D1 绑定入口，通常需要重新创建 Pages 项目，并选择 GitHub 仓库部署。
-
-创建 Pages 项目时请这样填：
+创建或修改 Pages 项目时请这样填：
 
 ```text
 Framework preset: None
 Build command: npm run build
-Build output directory: /
+Build output directory: .
 Root directory: /
+Deploy command: true
 ```
+
+注意：
+
+- `Build output directory` 填英文句号 `.`，不要填 `/`。
+- 如果 Cloudflare 允许 Deploy command 为空，可以留空。
+- 如果 Cloudflare 不允许 Deploy command 为空，就填 `true`。
+- 不要填 `npx wrangler deploy`，这个命令是 Worker 项目用的，不适合 Pages。
 
 项目根目录里有 `functions/` 目录时，Cloudflare Pages 才会启用 Pages Functions。
 
@@ -102,8 +108,8 @@ PHOTO_DB
 部署完成后，网页上传照片会走：
 
 ```text
-POST /api/photos
 GET /api/photos
+POST /api/photos
 DELETE /api/photos/:id
 ```
 
@@ -125,6 +131,16 @@ DELETE /api/photos/:id
 ```
 
 `photos` 表会由接口自动创建，不需要你手动写 SQL。
+
+## 判断是不是最新部署
+
+首页顶部下方会显示：
+
+```text
+Version: Cloudflare Pages Functions + D1 · 2026-06-09
+```
+
+如果你打开网站看到的是 Hello World，或者看不到这个版本条，说明 Cloudflare 没有部署到这个仓库的正确根目录，或者你打开的是另一个 Pages/Worker 项目。
 
 ## 后续添加小游戏链接
 
