@@ -6,17 +6,12 @@ export async function onRequestGet(context) {
   await ensureSchema(env);
 
   const { results } = await env.PHOTO_DB.prepare(
-    `SELECT id, file_key AS key, title, meta, size, type, created_at AS createdAt
+    `SELECT id, title, meta, image_data AS image, size, type, created_at AS createdAt
      FROM photos
      ORDER BY created_at DESC`
   ).all();
 
-  const photos = results.map(row => ({
-    ...row,
-    image: `/api/photo-file?key=${encodeURIComponent(row.key)}`
-  }));
-
-  return jsonResponse(photos);
+  return jsonResponse(results || []);
 }
 
 export async function onRequestPost(context) {
@@ -36,32 +31,29 @@ export async function onRequestPost(context) {
   }
 
   const created = [];
+  const maxBytes = 900 * 1024;
 
   for (const file of files) {
     if (!file.type.startsWith("image/")) continue;
 
-    const ext = getExtension(file.name, file.type);
-    const id = crypto.randomUUID();
-    const key = `photos/${Date.now()}-${id}.${ext}`;
-    const createdAt = new Date().toISOString();
+    if (file.size > maxBytes) {
+      return jsonResponse({ error: `图片 ${file.name} 太大，请先压缩到 900KB 以内。` }, 413);
+    }
 
-    await env.PHOTO_BUCKET.put(key, file.stream(), {
-      httpMetadata: {
-        contentType: file.type || "application/octet-stream"
-      }
-    });
+    const id = crypto.randomUUID();
+    const createdAt = new Date().toISOString();
+    const imageData = await fileToDataUrl(file);
 
     await env.PHOTO_DB.prepare(
-      `INSERT INTO photos (id, file_key, title, meta, size, type, created_at)
+      `INSERT INTO photos (id, title, meta, image_data, size, type, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?)`
-    ).bind(id, key, title, meta, file.size, file.type, createdAt).run();
+    ).bind(id, title, meta, imageData, file.size, file.type, createdAt).run();
 
     created.push({
       id,
-      key,
       title,
       meta,
-      image: `/api/photo-file?key=${encodeURIComponent(key)}`,
+      image: imageData,
       size: file.size,
       type: file.type,
       createdAt
@@ -69,23 +61,15 @@ export async function onRequestPost(context) {
   }
 
   const { results } = await env.PHOTO_DB.prepare(
-    `SELECT id, file_key AS key, title, meta, size, type, created_at AS createdAt
+    `SELECT id, title, meta, image_data AS image, size, type, created_at AS createdAt
      FROM photos
      ORDER BY created_at DESC`
   ).all();
 
-  const allPhotos = results.map(row => ({
-    ...row,
-    image: `/api/photo-file?key=${encodeURIComponent(row.key)}`
-  }));
-
-  return jsonResponse({ created, allPhotos });
+  return jsonResponse({ created, allPhotos: results || [] });
 }
 
 function checkBindings(env) {
-  if (!env.PHOTO_BUCKET) {
-    return jsonResponse({ error: "R2 binding PHOTO_BUCKET is not configured." }, 500);
-  }
   if (!env.PHOTO_DB) {
     return jsonResponse({ error: "D1 binding PHOTO_DB is not configured." }, 500);
   }
@@ -96,9 +80,9 @@ async function ensureSchema(env) {
   await env.PHOTO_DB.prepare(
     `CREATE TABLE IF NOT EXISTS photos (
       id TEXT PRIMARY KEY,
-      file_key TEXT NOT NULL,
       title TEXT NOT NULL,
       meta TEXT,
+      image_data TEXT NOT NULL,
       size INTEGER,
       type TEXT,
       created_at TEXT NOT NULL
@@ -106,13 +90,17 @@ async function ensureSchema(env) {
   ).run();
 }
 
-function getExtension(filename, type) {
-  const fromName = filename.split(".").pop()?.toLowerCase();
-  if (fromName && /^[a-z0-9]+$/.test(fromName)) return fromName;
-  if (type === "image/png") return "png";
-  if (type === "image/webp") return "webp";
-  if (type === "image/gif") return "gif";
-  return "jpg";
+async function fileToDataUrl(file) {
+  const buffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const chunkSize = 0x8000;
+
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+
+  return `data:${file.type || "image/jpeg"};base64,${btoa(binary)}`;
 }
 
 function jsonResponse(data, status = 200) {
