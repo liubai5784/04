@@ -10,7 +10,8 @@
 - 小游戏合集卡片
 - 生成照片作品墙
 - 学习工具箱入口
-- Cloudflare Pages Functions + R2 + D1 云端上传照片
+- Cloudflare Pages Functions + D1 上传照片
+- 不需要 R2，不需要信用卡
 
 ## 文件结构
 
@@ -21,10 +22,9 @@
 ├── script.js
 ├── functions/
 │   └── api/
-│       ├── photos/
-│       │   ├── index.js
-│       │   └── [id].js
-│       └── photo-file.js
+│       └── photos/
+│           ├── index.js
+│           └── [id].js
 ├── wrangler.toml
 ├── server.js              # 本地 Node 测试备用
 ├── package.json           # 本地 Node 测试备用
@@ -34,47 +34,34 @@
 
 ## Cloudflare 部署方式
 
-这个项目推荐使用：
+这个项目现在推荐使用：
 
 ```text
 前端：Cloudflare Pages
 后端接口：Cloudflare Pages Functions
-图片文件存储：Cloudflare R2
-照片信息数据库：Cloudflare D1
+照片数据库：Cloudflare D1
 ```
 
-### 1. 创建 R2 存储桶
+图片会被前端压缩为较小的 JPG，然后以 Base64/Data URL 的形式存入 D1。
 
-进入 Cloudflare 后台：
+这种方案的优点是：
 
 ```text
-R2 Object Storage → Create bucket
+不需要 R2
+不需要信用卡
+部署简单
+网页端可以直接上传照片
 ```
 
-建议桶名：
+缺点是：
 
 ```text
-photo-room-04
+不适合存很多高清大图
+更适合小规模作品展示
+建议每张图控制在 900KB 以内
 ```
 
-### 2. 给 Pages 项目绑定 R2
-
-进入你的 Cloudflare Pages 项目：
-
-```text
-Settings → Functions → R2 bucket bindings
-```
-
-新增绑定：
-
-```text
-Variable name: PHOTO_BUCKET
-R2 bucket: photo-room-04
-```
-
-注意：变量名必须是 `PHOTO_BUCKET`，因为代码里就是用这个名字读取 R2。
-
-### 3. 创建 D1 数据库
+## 创建 D1 数据库
 
 进入 Cloudflare 后台：
 
@@ -88,7 +75,7 @@ Workers & Pages → D1 SQL Database → Create database
 photo-room-04-db
 ```
 
-### 4. 给 Pages 项目绑定 D1
+## 给 Pages 项目绑定 D1
 
 进入你的 Cloudflare Pages 项目：
 
@@ -103,17 +90,32 @@ Variable name: PHOTO_DB
 D1 database: photo-room-04-db
 ```
 
-注意：变量名必须是 `PHOTO_DB`。
+注意：变量名必须是：
 
-### 5. 重新部署 Pages
+```text
+PHOTO_DB
+```
 
-绑定完成后，回到 Pages 项目重新部署一次。部署完成后，网页上传照片会走：
+因为代码里就是用这个名字读取 D1。
+
+绑定完成后，重新部署一次 Cloudflare Pages。
+
+## 接口
+
+部署完成后，网页上传照片会走：
 
 ```text
 POST /api/photos
 GET /api/photos
-GET /api/photo-file?key=xxx
 DELETE /api/photos/:id
+```
+
+不再需要：
+
+```text
+PHOTO_BUCKET
+R2
+/api/photo-file
 ```
 
 ## 上传照片
@@ -125,11 +127,12 @@ DELETE /api/photos/:id
 3. 填标题和分类说明
 4. 点「上传到照片墙」
 
+上传时前端会自动压缩图片。
+
 上传成功后：
 
 ```text
-图片文件 → Cloudflare R2 的 photos/ 目录
-照片标题、分类、文件 key、上传时间 → Cloudflare D1 的 photos 表
+图片内容、标题、分类、大小、类型、上传时间 → Cloudflare D1 的 photos 表
 ```
 
 `photos` 表会由接口自动创建，不需要你手动写 SQL。
@@ -152,7 +155,7 @@ const games = [
 
 ## 本地 Node 测试备用
 
-仓库里仍保留了 `server.js` 和 `package.json`，只是备用方案。Cloudflare 部署时主要使用 `functions/`、R2 和 D1。
+仓库里仍保留了 `server.js` 和 `package.json`，只是备用方案。Cloudflare 部署时主要使用 `functions/` 和 D1。
 
 本地 Node 运行：
 
@@ -169,4 +172,4 @@ http://localhost:3000
 
 ## 注意
 
-Cloudflare Pages 可以运行 Pages Functions，但需要在后台绑定 R2 和 D1。没有绑定 `PHOTO_BUCKET` 或 `PHOTO_DB` 时，照片上传接口会报错。
+Cloudflare Pages 可以运行 Pages Functions，但需要在后台绑定 D1。没有绑定 `PHOTO_DB` 时，照片上传接口会报错。
