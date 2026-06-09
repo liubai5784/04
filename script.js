@@ -82,10 +82,10 @@ function renderPhotos() {
         serverPhotos = data.allPhotos || [];
         renderPhotos();
         renderCounts();
-        tip.textContent = "已从 R2 删除这张照片。";
+        tip.textContent = "已从 D1 数据库删除这张照片。";
       } catch (error) {
         console.error(error);
-        tip.textContent = "删除失败：请确认 Cloudflare Pages 已绑定 R2 存储桶 PHOTO_BUCKET。";
+        tip.textContent = "删除失败：请确认 Cloudflare Pages 已绑定 D1 数据库 PHOTO_DB。";
       }
     });
   });
@@ -117,13 +117,32 @@ async function loadServerPhotos() {
     const response = await fetch("/api/photos");
     if (!response.ok) throw new Error("接口不可用");
     serverPhotos = await response.json();
-    tip.textContent = "Cloudflare R2 已连接：上传照片会保存到云端。";
+    tip.textContent = "Cloudflare D1 已连接：上传照片会保存到数据库。";
   } catch (error) {
-    console.warn("Cloudflare R2 接口未连接：", error);
-    tip.textContent = "照片云端接口暂不可用：请在 Cloudflare Pages 里绑定 R2，变量名为 PHOTO_BUCKET。";
+    console.warn("Cloudflare D1 接口未连接：", error);
+    tip.textContent = "照片云端接口暂不可用：请在 Cloudflare Pages 里绑定 D1，变量名为 PHOTO_DB。";
   }
   renderPhotos();
   renderCounts();
+}
+
+async function compressImage(file, maxSize = 1400, quality = 0.78) {
+  if (!file.type.startsWith("image/")) return file;
+  if (file.type === "image/gif") return file;
+
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+
+  const context = canvas.getContext("2d");
+  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", quality));
+  if (!blob) return file;
+
+  return new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" });
 }
 
 async function handlePhotoUpload(event) {
@@ -140,20 +159,26 @@ async function handlePhotoUpload(event) {
     return;
   }
 
-  const formData = new FormData();
-  files.forEach(file => formData.append("photos", file));
-  formData.append("title", titleInput.value.trim() || "上传照片");
-  formData.append("meta", metaInput.value.trim() || "网页端上传");
-
-  tip.textContent = "正在上传到 Cloudflare R2……";
+  tip.textContent = "正在压缩图片并上传到 Cloudflare D1……";
 
   try {
+    const formData = new FormData();
+    for (const file of files) {
+      const compressed = await compressImage(file);
+      formData.append("photos", compressed);
+    }
+    formData.append("title", titleInput.value.trim() || "上传照片");
+    formData.append("meta", metaInput.value.trim() || "网页端上传");
+
     const response = await fetch("/api/photos", {
       method: "POST",
       body: formData
     });
 
-    if (!response.ok) throw new Error("上传接口返回错误");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || "上传接口返回错误");
+    }
 
     const data = await response.json();
     serverPhotos = data.allPhotos || [];
@@ -163,10 +188,10 @@ async function handlePhotoUpload(event) {
     input.value = "";
     titleInput.value = "";
     metaInput.value = "";
-    tip.textContent = `已上传 ${files.length} 张照片，并保存到 Cloudflare R2。`;
+    tip.textContent = `已上传 ${files.length} 张照片，并保存到 Cloudflare D1。`;
   } catch (error) {
     console.error(error);
-    tip.textContent = "上传失败：请确认 Cloudflare Pages Functions 已启用，并绑定 R2 存储桶 PHOTO_BUCKET。";
+    tip.textContent = `上传失败：${error.message || "请确认 Cloudflare Pages Functions 已启用，并绑定 D1 数据库 PHOTO_DB。"}`;
   }
 }
 
@@ -176,9 +201,9 @@ function bindUploadPanel() {
   const tip = document.querySelector("#uploadTip");
 
   form.addEventListener("submit", handlePhotoUpload);
-  clearButton.textContent = "刷新云端照片";
+  clearButton.textContent = "刷新 D1 照片";
   clearButton.addEventListener("click", () => {
-    tip.textContent = "正在刷新云端照片列表……";
+    tip.textContent = "正在刷新 D1 照片列表……";
     loadServerPhotos();
   });
 }
