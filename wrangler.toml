@@ -2,14 +2,7 @@ name = "photo-room-04"
 compatibility_date = "2026-06-09"
 pages_build_output_dir = "."
 
-[[r2_buckets]]
-binding = "PHOTO_BUCKET"
-bucket_name = "photo-room-04"
-
-# Cloudflare Pages 需要在后台绑定 D1。
-# 绑定变量名必须是 PHOTO_DB。
-# database_id 创建后在 Cloudflare 后台复制填入。
-[[d1_databases]]
-binding = "PHOTO_DB"
-database_name = "photo-room-04-db"
-database_id = "replace-with-your-d1-database-id"
+# D1 不在这里写占位 database_id。
+# 请在 Cloudflare Pages 后台绑定：
+# Settings → Functions → D1 database bindings
+# Variable name: PHOTO_DB
