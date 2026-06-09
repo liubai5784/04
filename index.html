@@ -21,9 +21,9 @@
   <main id="home">
     <section class="hero section-panel">
       <div class="hero-copy">
-        <p class="eyebrow">Personal Website · Games · Images · Tools</p>
+        <p class="eyebrow">Cloudflare D1 Edition · Games · Images · Tools</p>
         <h1>把做过的小游戏和生成照片，整理成一个能慢慢逛的作品空间。</h1>
-        <p class="hero-desc">第一版先搭好框架：图片式界面、大封面入口、照片墙、项目列表和后续可替换的数据结构。</p>
+        <p class="hero-desc">当前版本是 Cloudflare Pages + Functions + D1 架构：图片式界面、大封面入口、照片墙、项目列表和网页端上传通道。</p>
         <div class="hero-actions">
           <a class="btn primary" href="#games">查看小游戏</a>
           <a class="btn ghost" href="#gallery">进入相册</a>
@@ -32,6 +32,11 @@
       <div class="hero-visual image-placeholder large">
         <span>主视觉图片占位</span>
       </div>
+    </section>
+
+    <section class="version-strip">
+      <strong>Version</strong>
+      <span>Cloudflare Pages Functions + D1 · 2026-06-09</span>
     </section>
 
     <section class="stats-grid">
@@ -53,14 +58,14 @@
       <div class="section-title">
         <p class="eyebrow">Image Gallery</p>
         <h2>生成照片 / 作品墙</h2>
-        <p>这里已经接入后端上传。通过后端启动网站后，上传的照片会保存到项目的 <code>uploads/</code> 文件夹，并自动显示在照片墙里。</p>
+        <p>这里使用 Cloudflare Pages Functions + D1 上传照片。图片会在前端压缩后保存到 D1 数据库，不需要 R2，也不需要信用卡。</p>
       </div>
 
       <form class="upload-panel" id="photoUploadForm">
         <label class="upload-drop">
           <input id="photoInput" type="file" accept="image/*" multiple />
           <span>选择照片</span>
-          <small>支持多选，图片会上传到后端 uploads 文件夹</small>
+          <small>支持多选，图片会压缩后保存到 Cloudflare D1</small>
         </label>
         <div class="upload-fields">
           <input id="photoTitle" type="text" placeholder="照片标题，例如：日出房间" />
@@ -68,9 +73,9 @@
         </div>
         <div class="upload-actions">
           <button class="btn primary" type="submit">上传到照片墙</button>
-          <button class="btn ghost" type="button" id="clearLocalPhotos">刷新后端照片</button>
+          <button class="btn ghost" type="button" id="clearLocalPhotos">刷新 D1 照片</button>
         </div>
-        <p class="upload-tip" id="uploadTip">正在检测后端连接……</p>
+        <p class="upload-tip" id="uploadTip">正在检测 Cloudflare D1 接口……</p>
       </form>
 
       <div class="gallery-grid" id="galleryGrid"></div>
@@ -89,7 +94,7 @@
       <div>
         <p class="eyebrow">About</p>
         <h2>这个网站之后可以继续扩展</h2>
-        <p>当前版本偏“图片式 UI”：用真实图片感的布局、深色背景、玻璃卡片和大图入口。照片上传已经接入 Node 后端，适合先在本地或服务器上运行。</p>
+        <p>当前版本偏“图片式 UI”：用真实图片感的布局、深色背景、玻璃卡片和大图入口。照片上传接入 Cloudflare D1，适合少量压缩作品图展示。</p>
       </div>
       <div class="about-card">
         <span>下一步建议</span>
@@ -98,7 +103,7 @@
     </section>
   </main>
 
-  <footer class="footer">© 2026 留白 · Personal Gallery Website</footer>
+  <footer class="footer">© 2026 留白 · Personal Gallery Website · Cloudflare D1 Edition</footer>
 
   <script src="script.js"></script>
 </body>
