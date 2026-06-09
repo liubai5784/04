@@ -1,9 +1,9 @@
 {
   "name": "liubai-gallery-space",
   "version": "1.0.0",
-  "description": "一个整合小游戏、生成照片和学习工具的 Cloudflare Pages 个人作品空间。",
+  "private": true,
+  "description": "Cloudflare Pages 静态作品空间，使用 Pages Functions + D1 保存压缩照片。",
   "scripts": {
-    "build": "echo \"No build step required for Cloudflare Pages\""
-  },
-  "devDependencies": {}
+    "build": "echo \"Static site ready for Cloudflare Pages\""
+  }
 }
