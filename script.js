@@ -22,7 +22,7 @@ const games = [
   }
 ];
 
-const photos = [
+const defaultPhotos = [
   { title: "Warma 图片区", meta: "角色图 / 换装 / 场景", image: "" },
   { title: "工地项目图", meta: "桥墩 / 吊机 / 构件", image: "" },
   { title: "油画风作品", meta: "风格化图像", image: "" },
@@ -35,6 +35,26 @@ const tools = [
   { name: "考试急救卡", desc: "临考前按章节整理重点、易错点、题型。", url: "#" },
   { name: "图片提示词库", desc: "保存 Warma、工地、油画风等常用提示词。", url: "#" }
 ];
+
+const LOCAL_PHOTOS_KEY = "lb-gallery-local-photos";
+let localPhotos = loadLocalPhotos();
+
+function getAllPhotos() {
+  return [...localPhotos, ...defaultPhotos];
+}
+
+function loadLocalPhotos() {
+  try {
+    return JSON.parse(localStorage.getItem(LOCAL_PHOTOS_KEY)) || [];
+  } catch (error) {
+    console.warn("本地照片读取失败：", error);
+    return [];
+  }
+}
+
+function saveLocalPhotos() {
+  localStorage.setItem(LOCAL_PHOTOS_KEY, JSON.stringify(localPhotos));
+}
 
 function createPlaceholder(label, className = "") {
   return `<div class="image-placeholder ${className}"><span>${label}</span></div>`;
@@ -56,11 +76,24 @@ function renderGames() {
 
 function renderPhotos() {
   const grid = document.querySelector("#galleryGrid");
-  grid.innerHTML = photos.map(item => `
-    <article class="photo-card image-placeholder" ${item.image ? `style="background-image: linear-gradient(to top, rgba(0,0,0,.55), transparent), url('${item.image}')"` : ""}>
+  const photos = getAllPhotos();
+
+  grid.innerHTML = photos.map((item, index) => `
+    <article class="photo-card image-placeholder" ${item.image ? `style="background-image: linear-gradient(to top, rgba(0,0,0,.68), rgba(0,0,0,.06)), url('${item.image}')"` : ""}>
+      ${item.local ? `<button class="photo-remove" type="button" data-index="${index}" title="删除这张本地照片">×</button>` : ""}
       <div class="photo-title">${item.title}<span class="photo-meta">${item.meta}</span></div>
     </article>
   `).join("");
+
+  document.querySelectorAll(".photo-remove").forEach(button => {
+    button.addEventListener("click", () => {
+      const index = Number(button.dataset.index);
+      localPhotos.splice(index, 1);
+      saveLocalPhotos();
+      renderPhotos();
+      renderCounts();
+    });
+  });
 }
 
 function renderTools() {
@@ -79,11 +112,79 @@ function renderTools() {
 
 function renderCounts() {
   document.querySelector("#gameCount").textContent = games.length;
-  document.querySelector("#photoCount").textContent = photos.length;
+  document.querySelector("#photoCount").textContent = getAllPhotos().length;
   document.querySelector("#toolCount").textContent = tools.length;
+}
+
+function fileToDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handlePhotoUpload(event) {
+  event.preventDefault();
+
+  const input = document.querySelector("#photoInput");
+  const titleInput = document.querySelector("#photoTitle");
+  const metaInput = document.querySelector("#photoMeta");
+  const tip = document.querySelector("#uploadTip");
+  const files = Array.from(input.files || []);
+
+  if (!files.length) {
+    tip.textContent = "请先选择至少一张图片。";
+    return;
+  }
+
+  tip.textContent = "正在读取图片……";
+
+  try {
+    const createdPhotos = await Promise.all(files.map(async (file, index) => {
+      const image = await fileToDataURL(file);
+      const baseTitle = titleInput.value.trim() || file.name.replace(/\.[^.]+$/, "") || "本地上传照片";
+      return {
+        title: files.length > 1 ? `${baseTitle} ${index + 1}` : baseTitle,
+        meta: metaInput.value.trim() || "网页端本地上传",
+        image,
+        local: true
+      };
+    }));
+
+    localPhotos = [...createdPhotos, ...localPhotos];
+    saveLocalPhotos();
+    renderPhotos();
+    renderCounts();
+
+    input.value = "";
+    titleInput.value = "";
+    metaInput.value = "";
+    tip.textContent = `已添加 ${createdPhotos.length} 张照片。本地保存只在当前浏览器有效。`;
+  } catch (error) {
+    console.error(error);
+    tip.textContent = "图片读取失败，可以换一张体积小一点的图片试试。";
+  }
+}
+
+function bindUploadPanel() {
+  const form = document.querySelector("#photoUploadForm");
+  const clearButton = document.querySelector("#clearLocalPhotos");
+  const tip = document.querySelector("#uploadTip");
+
+  form.addEventListener("submit", handlePhotoUpload);
+  clearButton.addEventListener("click", () => {
+    localPhotos = [];
+    saveLocalPhotos();
+    renderPhotos();
+    renderCounts();
+    tip.textContent = "已清空当前浏览器里的本地上传照片。";
+  });
 }
 
 renderGames();
 renderPhotos();
 renderTools();
 renderCounts();
+bindUploadPanel();
