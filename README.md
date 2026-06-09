@@ -10,7 +10,7 @@
 - 小游戏合集卡片
 - 生成照片作品墙
 - 学习工具箱入口
-- 已加入 Node 后端，支持网页端上传照片
+- Cloudflare Pages Functions + R2 云端上传照片
 
 ## 文件结构
 
@@ -19,35 +19,70 @@
 ├── index.html
 ├── style.css
 ├── script.js
-├── server.js
-├── package.json
+├── functions/
+│   └── api/
+│       ├── photos/
+│       │   ├── index.js
+│       │   └── [id].js
+│       └── photo-file.js
+├── wrangler.toml
+├── server.js              # 本地 Node 测试备用
+├── package.json           # 本地 Node 测试备用
 ├── .gitignore
 └── README.md
 ```
 
-运行后会自动生成：
+## Cloudflare 部署方式
+
+这个项目推荐使用：
 
 ```text
-uploads/          # 上传后的图片文件
-data/photos.json # 图片信息数据库
+前端：Cloudflare Pages
+后端接口：Cloudflare Pages Functions
+图片存储：Cloudflare R2
 ```
 
-## 本地运行
+### 1. 创建 R2 存储桶
 
-先安装 Node.js，然后在项目目录运行：
-
-```bash
-npm install
-npm start
-```
-
-打开：
+进入 Cloudflare 后台：
 
 ```text
-http://localhost:3000
+R2 Object Storage → Create bucket
 ```
 
-这时网页里的上传通道就会真正把图片保存到后端 `uploads/` 文件夹里。
+建议桶名：
+
+```text
+photo-room-04
+```
+
+### 2. 给 Pages 项目绑定 R2
+
+进入你的 Cloudflare Pages 项目：
+
+```text
+Settings → Functions → R2 bucket bindings
+```
+
+新增绑定：
+
+```text
+Variable name: PHOTO_BUCKET
+R2 bucket: photo-room-04
+```
+
+注意：变量名必须是 `PHOTO_BUCKET`，因为代码里就是用这个名字读取 R2。
+
+### 3. 重新部署 Pages
+
+绑定完成后，回到 Pages 项目重新部署一次。部署完成后，网页上传照片会走：
+
+```text
+POST /api/photos
+GET /api/photos
+GET /api/photo-file?key=xxx
+DELETE /api/photos/:id
+```
 
 ## 上传照片
 
@@ -58,16 +93,16 @@ http://localhost:3000
 3. 填标题和分类说明
 4. 点「上传到照片墙」
 
-上传成功后，图片会保存到：
-
-```text
-uploads/
-```
-
-图片信息会保存到：
+上传成功后，图片会保存到 Cloudflare R2，照片列表会保存为 R2 里的：
 
 ```text
 data/photos.json
+```
+
+图片文件会保存到 R2 里的：
+
+```text
+photos/
 ```
 
 ## 后续添加小游戏链接
@@ -86,6 +121,23 @@ const games = [
 ];
 ```
 
+## 本地 Node 测试备用
+
+仓库里仍保留了 `server.js` 和 `package.json`，只是备用方案。Cloudflare 部署时主要使用 `functions/` 和 R2。
+
+本地 Node 运行：
+
+```bash
+npm install
+npm start
+```
+
+打开：
+
+```text
+http://localhost:3000
+```
+
 ## 注意
 
-GitHub Pages 只能托管静态网页，不能运行这个 Node 后端。想使用真正上传功能，需要在本地运行，或者之后部署到 Render、Railway、Vercel、服务器等支持 Node 的平台。
+Cloudflare Pages 可以运行 Pages Functions，但需要在后台绑定 R2。没有绑定 `PHOTO_BUCKET` 时，照片上传接口会报错。
