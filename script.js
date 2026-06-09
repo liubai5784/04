@@ -36,24 +36,10 @@ const tools = [
   { name: "图片提示词库", desc: "保存 Warma、工地、油画风等常用提示词。", url: "#" }
 ];
 
-const LOCAL_PHOTOS_KEY = "lb-gallery-local-photos";
-let localPhotos = loadLocalPhotos();
+let serverPhotos = [];
 
 function getAllPhotos() {
-  return [...localPhotos, ...defaultPhotos];
-}
-
-function loadLocalPhotos() {
-  try {
-    return JSON.parse(localStorage.getItem(LOCAL_PHOTOS_KEY)) || [];
-  } catch (error) {
-    console.warn("本地照片读取失败：", error);
-    return [];
-  }
-}
-
-function saveLocalPhotos() {
-  localStorage.setItem(LOCAL_PHOTOS_KEY, JSON.stringify(localPhotos));
+  return [...serverPhotos, ...defaultPhotos];
 }
 
 function createPlaceholder(label, className = "") {
@@ -78,20 +64,29 @@ function renderPhotos() {
   const grid = document.querySelector("#galleryGrid");
   const photos = getAllPhotos();
 
-  grid.innerHTML = photos.map((item, index) => `
+  grid.innerHTML = photos.map(item => `
     <article class="photo-card image-placeholder" ${item.image ? `style="background-image: linear-gradient(to top, rgba(0,0,0,.68), rgba(0,0,0,.06)), url('${item.image}')"` : ""}>
-      ${item.local ? `<button class="photo-remove" type="button" data-index="${index}" title="删除这张本地照片">×</button>` : ""}
+      ${item.id ? `<button class="photo-remove" type="button" data-id="${item.id}" title="删除这张照片">×</button>` : ""}
       <div class="photo-title">${item.title}<span class="photo-meta">${item.meta}</span></div>
     </article>
   `).join("");
 
   document.querySelectorAll(".photo-remove").forEach(button => {
-    button.addEventListener("click", () => {
-      const index = Number(button.dataset.index);
-      localPhotos.splice(index, 1);
-      saveLocalPhotos();
-      renderPhotos();
-      renderCounts();
+    button.addEventListener("click", async () => {
+      const id = button.dataset.id;
+      const tip = document.querySelector("#uploadTip");
+      try {
+        const response = await fetch(`/api/photos/${id}`, { method: "DELETE" });
+        if (!response.ok) throw new Error("删除失败");
+        const data = await response.json();
+        serverPhotos = data.allPhotos || [];
+        renderPhotos();
+        renderCounts();
+        tip.textContent = "已从后端删除这张照片。";
+      } catch (error) {
+        console.error(error);
+        tip.textContent = "删除失败：请确认后端正在运行。";
+      }
     });
   });
 }
@@ -116,13 +111,19 @@ function renderCounts() {
   document.querySelector("#toolCount").textContent = tools.length;
 }
 
-function fileToDataURL(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+async function loadServerPhotos() {
+  const tip = document.querySelector("#uploadTip");
+  try {
+    const response = await fetch("/api/photos");
+    if (!response.ok) throw new Error("接口不可用");
+    serverPhotos = await response.json();
+    tip.textContent = "后端已连接：上传的照片会保存到服务器 uploads 文件夹。";
+  } catch (error) {
+    console.warn("后端未连接：", error);
+    tip.textContent = "后端未启动时只能看框架。运行 npm install 和 npm start 后，就可以真正上传照片。";
+  }
+  renderPhotos();
+  renderCounts();
 }
 
 async function handlePhotoUpload(event) {
@@ -139,32 +140,33 @@ async function handlePhotoUpload(event) {
     return;
   }
 
-  tip.textContent = "正在读取图片……";
+  const formData = new FormData();
+  files.forEach(file => formData.append("photos", file));
+  formData.append("title", titleInput.value.trim() || "上传照片");
+  formData.append("meta", metaInput.value.trim() || "网页端后端上传");
+
+  tip.textContent = "正在上传到后端……";
 
   try {
-    const createdPhotos = await Promise.all(files.map(async (file, index) => {
-      const image = await fileToDataURL(file);
-      const baseTitle = titleInput.value.trim() || file.name.replace(/\.[^.]+$/, "") || "本地上传照片";
-      return {
-        title: files.length > 1 ? `${baseTitle} ${index + 1}` : baseTitle,
-        meta: metaInput.value.trim() || "网页端本地上传",
-        image,
-        local: true
-      };
-    }));
+    const response = await fetch("/api/photos", {
+      method: "POST",
+      body: formData
+    });
 
-    localPhotos = [...createdPhotos, ...localPhotos];
-    saveLocalPhotos();
+    if (!response.ok) throw new Error("上传接口返回错误");
+
+    const data = await response.json();
+    serverPhotos = data.allPhotos || [];
     renderPhotos();
     renderCounts();
 
     input.value = "";
     titleInput.value = "";
     metaInput.value = "";
-    tip.textContent = `已添加 ${createdPhotos.length} 张照片。本地保存只在当前浏览器有效。`;
+    tip.textContent = `已上传 ${files.length} 张照片，文件保存在后端 uploads 文件夹。`;
   } catch (error) {
     console.error(error);
-    tip.textContent = "图片读取失败，可以换一张体积小一点的图片试试。";
+    tip.textContent = "上传失败：请确认已经运行 npm install 和 npm start，并通过 http://localhost:3000 打开网站。";
   }
 }
 
@@ -174,12 +176,10 @@ function bindUploadPanel() {
   const tip = document.querySelector("#uploadTip");
 
   form.addEventListener("submit", handlePhotoUpload);
+  clearButton.textContent = "刷新后端照片";
   clearButton.addEventListener("click", () => {
-    localPhotos = [];
-    saveLocalPhotos();
-    renderPhotos();
-    renderCounts();
-    tip.textContent = "已清空当前浏览器里的本地上传照片。";
+    tip.textContent = "正在刷新照片列表……";
+    loadServerPhotos();
   });
 }
 
@@ -188,3 +188,4 @@ renderPhotos();
 renderTools();
 renderCounts();
 bindUploadPanel();
+loadServerPhotos();
