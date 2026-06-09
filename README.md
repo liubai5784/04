@@ -1,6 +1,6 @@
 # 留白的作品空间
 
-这是一个用于整合小游戏、网页小工具和生成图片作品的个人静态网站。
+这是一个用于整合小游戏、网页小工具和生成图片作品的个人网站。
 
 ## 当前版本
 
@@ -10,7 +10,7 @@
 - 小游戏合集卡片
 - 生成照片作品墙
 - 学习工具箱入口
-- 数据集中写在 `script.js`，方便后续维护
+- 已加入 Node 后端，支持网页端上传照片
 
 ## 文件结构
 
@@ -19,31 +19,55 @@
 ├── index.html
 ├── style.css
 ├── script.js
+├── server.js
+├── package.json
+├── .gitignore
 └── README.md
 ```
 
-## 后续添加图片
-
-建议新建目录：
+运行后会自动生成：
 
 ```text
-assets/images/
+uploads/          # 上传后的图片文件
+data/photos.json # 图片信息数据库
 ```
 
-然后把图片放进去，比如：
+## 本地运行
+
+先安装 Node.js，然后在项目目录运行：
+
+```bash
+npm install
+npm start
+```
+
+打开：
 
 ```text
-assets/images/hero.jpg
-assets/images/warma-01.jpg
-assets/images/site-bridge-01.jpg
+http://localhost:3000
 ```
 
-再到 `script.js` 里修改：
+这时网页里的上传通道就会真正把图片保存到后端 `uploads/` 文件夹里。
 
-```js
-const photos = [
-  { title: "Warma 图片区", meta: "角色图 / 换装 / 场景", image: "assets/images/warma-01.jpg" }
-];
+## 上传照片
+
+在网页的「生成照片 / 作品墙」区域：
+
+1. 点「选择照片」
+2. 选择一张或多张图片
+3. 填标题和分类说明
+4. 点「上传到照片墙」
+
+上传成功后，图片会保存到：
+
+```text
+uploads/
+```
+
+图片信息会保存到：
+
+```text
+data/photos.json
 ```
 
 ## 后续添加小游戏链接
@@ -62,12 +86,6 @@ const games = [
 ];
 ```
 
-## 部署建议
+## 注意
 
-可以直接用 GitHub Pages 部署：
-
-1. 打开仓库 Settings
-2. 找到 Pages
-3. Source 选择 Deploy from a branch
-4. Branch 选择 main / root
-5. 保存后等待生成访问链接
+GitHub Pages 只能托管静态网页，不能运行这个 Node 后端。想使用真正上传功能，需要在本地运行，或者之后部署到 Render、Railway、Vercel、服务器等支持 Node 的平台。
