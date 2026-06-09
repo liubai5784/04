@@ -1,8 +1,0 @@
-name = "04"
-compatibility_date = "2026-06-09"
-pages_build_output_dir = "."
-
-# D1 不在这里写占位 database_id。
-# 请在 Cloudflare Pages 后台绑定：
-# Settings → Functions → D1 database bindings
-# Variable name: PHOTO_DB
