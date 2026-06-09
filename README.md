@@ -25,51 +25,69 @@
 │       └── photos/
 │           ├── index.js
 │           └── [id].js
-├── wrangler.toml
 ├── package.json
 ├── .gitignore
 └── README.md
 ```
 
-## Cloudflare 部署方式
+## 重要说明
 
-这个项目推荐使用：
+这个仓库是 Cloudflare Pages 项目，不是 Worker 项目。
+
+不要使用这些命令：
 
 ```text
-前端：Cloudflare Pages
-后端接口：Cloudflare Pages Functions
-照片数据库：Cloudflare D1
+npx wrangler deploy
+npx wrangler versions upload
 ```
 
-图片会被前端压缩为较小的 JPG，然后以 Base64/Data URL 的形式存入 D1。
+项目根目录不再保留 `wrangler.toml`，避免 Cloudflare 把它误当成 Worker 部署。
 
-## Cloudflare Pages 构建配置
+## Cloudflare 简体中文界面创建方式
 
-创建或修改 Pages 项目时请这样填：
+进入 Cloudflare 后台：
 
 ```text
-Framework preset: None
-Build command: npm run build
-Build output directory: .
-Root directory: /
-Deploy command: true
+Workers 和 Pages → 创建 → Pages → 连接到 Git
+```
+
+选择仓库：
+
+```text
+liubai5784/04
+```
+
+生产分支选择：
+
+```text
+main
+```
+
+构建配置填写：
+
+```text
+框架预设：无 / None
+构建命令：npm run build
+构建输出目录：.
+根目录：/
+部署命令：true
+非生产分支部署命令：true
 ```
 
 注意：
 
-- `Build output directory` 填英文句号 `.`，不要填 `/`。
-- 如果 Cloudflare 允许 Deploy command 为空，可以留空。
-- 如果 Cloudflare 不允许 Deploy command 为空，就填 `true`。
-- 不要填 `npx wrangler deploy`，这个命令是 Worker 项目用的，不适合 Pages。
-
-项目根目录里有 `functions/` 目录时，Cloudflare Pages 才会启用 Pages Functions。
+- `构建输出目录` 填英文句号 `.`，不要填 `/`。
+- 如果界面允许部署命令为空，可以留空。
+- 如果界面不允许部署命令为空，就填 `true`。
+- 不要填 `none`，Cloudflare 会把它当命令执行。
+- 不要填任何 `wrangler` 命令。
 
 ## 创建 D1 数据库
 
 进入 Cloudflare 后台：
 
 ```text
-Workers & Pages → D1 SQL Database → Create database
+Workers 和 Pages → D1 SQL 数据库 → 创建数据库
 ```
 
 建议数据库名：
@@ -78,30 +96,28 @@ Workers & Pages → D1 SQL Database → Create database
 photo-room-04-db
 ```
 
-## 给 Pages 项目绑定 D1
+## 绑定 D1
 
 进入你的 Cloudflare Pages 项目：
 
 ```text
-Settings → Functions → D1 database bindings
+设置 → 函数 → D1 数据库绑定
 ```
 
 新增绑定：
 
 ```text
-Variable name: PHOTO_DB
-D1 database: photo-room-04-db
+变量名称：PHOTO_DB
+D1 数据库：photo-room-04-db
 ```
 
-注意：变量名必须是：
+变量名必须是：
 
 ```text
 PHOTO_DB
 ```
 
-因为代码里就是用这个名字读取 D1。
-
-绑定完成后，重新部署一次 Cloudflare Pages。
+绑定完成后，重新部署一次。
 
 ## 接口
 
@@ -113,24 +129,7 @@ POST /api/photos
 DELETE /api/photos/:id
 ```
 
-## 上传照片
-
-在网页的「生成照片 / 作品墙」区域：
-
-1. 点「选择照片」
-2. 选择一张或多张图片
-3. 填标题和分类说明
-4. 点「上传到照片墙」
-
-上传时前端会自动压缩图片。
-
-上传成功后：
-
-```text
-图片内容、标题、分类、大小、类型、上传时间 → Cloudflare D1 的 photos 表
-```
-
-`photos` 表会由接口自动创建，不需要你手动写 SQL。
+图片会被前端压缩，然后以 Base64/Data URL 的形式存入 D1。
 
 ## 判断是不是最新部署
 
@@ -140,7 +139,7 @@ DELETE /api/photos/:id
 Version: Cloudflare Pages Functions + D1 · 2026-06-09
 ```
 
-如果你打开网站看到的是 Hello World，或者看不到这个版本条，说明 Cloudflare 没有部署到这个仓库的正确根目录，或者你打开的是另一个 Pages/Worker 项目。
+如果你打开网站看到的是 Hello World，或者看不到这个版本条，说明 Cloudflare 没有部署到这个仓库的 main 分支根目录，或者你打开的是另一个 Pages/Worker 项目。
 
 ## 后续添加小游戏链接
 
@@ -157,7 +156,3 @@ const games = [
   }
 ];
 ```
-
-## 注意
-
-Cloudflare Pages 可以运行 Pages Functions，但需要在后台绑定 D1。没有绑定 `PHOTO_DB` 时，照片上传接口会报错。
