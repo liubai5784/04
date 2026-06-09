@@ -1,0 +1,7 @@
+name = "photo-room-04"
+compatibility_date = "2026-06-09"
+pages_build_output_dir = "."
+
+[[r2_buckets]]
+binding = "PHOTO_BUCKET"
+bucket_name = "photo-room-04"
