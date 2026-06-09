@@ -82,10 +82,10 @@ function renderPhotos() {
         serverPhotos = data.allPhotos || [];
         renderPhotos();
         renderCounts();
-        tip.textContent = "已从后端删除这张照片。";
+        tip.textContent = "已从 R2 删除这张照片。";
       } catch (error) {
         console.error(error);
-        tip.textContent = "删除失败：请确认后端正在运行。";
+        tip.textContent = "删除失败：请确认 Cloudflare Pages 已绑定 R2 存储桶 PHOTO_BUCKET。";
       }
     });
   });
@@ -117,10 +117,10 @@ async function loadServerPhotos() {
     const response = await fetch("/api/photos");
     if (!response.ok) throw new Error("接口不可用");
     serverPhotos = await response.json();
-    tip.textContent = "后端已连接：上传的照片会保存到服务器 uploads 文件夹。";
+    tip.textContent = "Cloudflare R2 已连接：上传照片会保存到云端。";
   } catch (error) {
-    console.warn("后端未连接：", error);
-    tip.textContent = "后端未启动时只能看框架。运行 npm install 和 npm start 后，就可以真正上传照片。";
+    console.warn("Cloudflare R2 接口未连接：", error);
+    tip.textContent = "照片云端接口暂不可用：请在 Cloudflare Pages 里绑定 R2，变量名为 PHOTO_BUCKET。";
   }
   renderPhotos();
   renderCounts();
@@ -143,9 +143,9 @@ async function handlePhotoUpload(event) {
   const formData = new FormData();
   files.forEach(file => formData.append("photos", file));
   formData.append("title", titleInput.value.trim() || "上传照片");
-  formData.append("meta", metaInput.value.trim() || "网页端后端上传");
+  formData.append("meta", metaInput.value.trim() || "网页端上传");
 
-  tip.textContent = "正在上传到后端……";
+  tip.textContent = "正在上传到 Cloudflare R2……";
 
   try {
     const response = await fetch("/api/photos", {
@@ -163,10 +163,10 @@ async function handlePhotoUpload(event) {
     input.value = "";
     titleInput.value = "";
     metaInput.value = "";
-    tip.textContent = `已上传 ${files.length} 张照片，文件保存在后端 uploads 文件夹。`;
+    tip.textContent = `已上传 ${files.length} 张照片，并保存到 Cloudflare R2。`;
   } catch (error) {
     console.error(error);
-    tip.textContent = "上传失败：请确认已经运行 npm install 和 npm start，并通过 http://localhost:3000 打开网站。";
+    tip.textContent = "上传失败：请确认 Cloudflare Pages Functions 已启用，并绑定 R2 存储桶 PHOTO_BUCKET。";
   }
 }
 
@@ -176,9 +176,9 @@ function bindUploadPanel() {
   const tip = document.querySelector("#uploadTip");
 
   form.addEventListener("submit", handlePhotoUpload);
-  clearButton.textContent = "刷新后端照片";
+  clearButton.textContent = "刷新云端照片";
   clearButton.addEventListener("click", () => {
-    tip.textContent = "正在刷新照片列表……";
+    tip.textContent = "正在刷新云端照片列表……";
     loadServerPhotos();
   });
 }
