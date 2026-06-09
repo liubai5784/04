@@ -53,8 +53,26 @@
       <div class="section-title">
         <p class="eyebrow">Image Gallery</p>
         <h2>生成照片 / 作品墙</h2>
-        <p>先用图片占位，后面把图片路径替换到 <code>script.js</code> 里就能显示。</p>
+        <p>可以先用下方通道从网页端上传照片。静态网页会把照片保存在当前浏览器本地，刷新后仍然显示；换设备或清浏览器数据后不会同步。</p>
       </div>
+
+      <form class="upload-panel" id="photoUploadForm">
+        <label class="upload-drop">
+          <input id="photoInput" type="file" accept="image/*" multiple />
+          <span>选择照片</span>
+          <small>支持多选，图片会保存到浏览器本地相册</small>
+        </label>
+        <div class="upload-fields">
+          <input id="photoTitle" type="text" placeholder="照片标题，例如：日出房间" />
+          <input id="photoMeta" type="text" placeholder="分类/说明，例如：光影统一 · 房间" />
+        </div>
+        <div class="upload-actions">
+          <button class="btn primary" type="submit">添加到照片墙</button>
+          <button class="btn ghost" type="button" id="clearLocalPhotos">清空本地上传</button>
+        </div>
+        <p class="upload-tip" id="uploadTip">提示：这版不需要服务器，适合先搭框架和预览效果。</p>
+      </form>
+
       <div class="gallery-grid" id="galleryGrid"></div>
     </section>
 
@@ -71,7 +89,7 @@
       <div>
         <p class="eyebrow">About</p>
         <h2>这个网站之后可以继续扩展</h2>
-        <p>当前版本偏“图片式 UI”：用真实图片感的布局、深色背景、玻璃卡片和大图入口。等你后面生成图片后，把图片放进 <code>assets/images/</code>，再改一下数据路径即可。</p>
+        <p>当前版本偏“图片式 UI”：用真实图片感的布局、深色背景、玻璃卡片和大图入口。等你后面生成图片后，可以先用网页上传通道预览；确定后再把图片放进 <code>assets/images/</code> 做成正式固定资源。</p>
       </div>
       <div class="about-card">
         <span>下一步建议</span>
