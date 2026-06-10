@@ -3,7 +3,7 @@
     {
       "title": "照片拼图小游戏",
       "desc": "上传一张图片，打乱成九宫格，点击两个碎片交换位置，把照片拼回原样。",
-      "cover": "assets/images/hero.png",
+      "cover": "",
       "tags": ["Puzzle", "照片", "小游戏"],
       "url": "games/puzzle.html"
     },
