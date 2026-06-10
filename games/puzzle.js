@@ -10,12 +10,31 @@ const statusEl = document.querySelector("#puzzleStatus");
 const defaultImage = "../assets/images/hero.png";
 const size = 3;
 let imageUrl = defaultImage;
+let imageRatio = 16 / 9;
 let tiles = [];
 let selectedIndex = null;
 let moveCount = 0;
+let dragIndex = null;
 
 function createSolvedTiles() {
   return Array.from({ length: size * size }, (_, index) => index);
+}
+
+function loadImageRatio(src) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => resolve(img.naturalWidth / img.naturalHeight || 1);
+    img.onerror = () => resolve(16 / 9);
+    img.src = src;
+  });
+}
+
+async function setImage(src) {
+  imageUrl = src;
+  imageRatio = await loadImageRatio(src);
+  board.style.aspectRatio = String(imageRatio);
+  preview.style.aspectRatio = String(imageRatio);
+  shuffleTiles();
 }
 
 function shuffleTiles() {
@@ -29,28 +48,44 @@ function shuffleTiles() {
   }
   tiles = shuffled;
   selectedIndex = null;
+  dragIndex = null;
   moveCount = 0;
   renderPuzzle();
 }
 
 function renderPuzzle() {
+  board.style.aspectRatio = String(imageRatio);
+  preview.style.aspectRatio = String(imageRatio);
   board.innerHTML = tiles.map((tile, index) => {
     const row = Math.floor(tile / size);
     const col = tile % size;
     const isSelected = selectedIndex === index;
     return `
-      <button class="puzzle-tile ${isSelected ? "is-selected" : ""}" type="button" data-index="${index}" style="background-image: url('${imageUrl}'); background-position: ${col * 50}% ${row * 50}%;"></button>
+      <button class="puzzle-tile ${isSelected ? "is-selected" : ""}" type="button" draggable="true" data-index="${index}" style="background-image: url('${imageUrl}'); background-position: ${col * 50}% ${row * 50}%;"></button>
     `;
   }).join("");
 
   preview.style.backgroundImage = `url('${imageUrl}')`;
   moveCountEl.textContent = moveCount;
   statusEl.textContent = isSolved() ? "完成" : "未完成";
-  tip.textContent = isSolved() ? "拼图完成！可以换一张图继续玩。" : "点击两个碎片可以交换位置。";
+  tip.textContent = isSolved() ? "拼图完成！可以换一张图继续玩。" : "可以点击两个碎片交换，也可以直接拖动碎片互换位置。";
 
   board.querySelectorAll(".puzzle-tile").forEach(button => {
     button.addEventListener("click", () => handleTileClick(Number(button.dataset.index)));
+    button.addEventListener("dragstart", event => handleDragStart(event, Number(button.dataset.index)));
+    button.addEventListener("dragover", event => event.preventDefault());
+    button.addEventListener("drop", event => handleDrop(event, Number(button.dataset.index)));
+    button.addEventListener("dragend", handleDragEnd);
   });
+}
+
+function swapTiles(fromIndex, toIndex) {
+  if (fromIndex === toIndex || fromIndex == null || toIndex == null) return;
+  [tiles[fromIndex], tiles[toIndex]] = [tiles[toIndex], tiles[fromIndex]];
+  selectedIndex = null;
+  dragIndex = null;
+  moveCount += 1;
+  renderPuzzle();
 }
 
 function handleTileClick(index) {
@@ -66,10 +101,26 @@ function handleTileClick(index) {
     return;
   }
 
-  [tiles[selectedIndex], tiles[index]] = [tiles[index], tiles[selectedIndex]];
-  selectedIndex = null;
-  moveCount += 1;
-  renderPuzzle();
+  swapTiles(selectedIndex, index);
+}
+
+function handleDragStart(event, index) {
+  dragIndex = index;
+  selectedIndex = index;
+  event.dataTransfer.effectAllowed = "move";
+  event.dataTransfer.setData("text/plain", String(index));
+  requestAnimationFrame(() => event.target.classList.add("is-dragging"));
+}
+
+function handleDrop(event, targetIndex) {
+  event.preventDefault();
+  const sourceIndex = Number(event.dataTransfer.getData("text/plain"));
+  swapTiles(Number.isFinite(sourceIndex) ? sourceIndex : dragIndex, targetIndex);
+}
+
+function handleDragEnd(event) {
+  event.target.classList.remove("is-dragging");
+  dragIndex = null;
 }
 
 function isSolved() {
@@ -85,15 +136,13 @@ input.addEventListener("change", () => {
   }
 
   if (imageUrl.startsWith("blob:")) URL.revokeObjectURL(imageUrl);
-  imageUrl = URL.createObjectURL(file);
-  shuffleTiles();
+  setImage(URL.createObjectURL(file));
 });
 
 shuffleButton.addEventListener("click", shuffleTiles);
 resetButton.addEventListener("click", () => {
   if (imageUrl.startsWith("blob:")) URL.revokeObjectURL(imageUrl);
-  imageUrl = defaultImage;
-  shuffleTiles();
+  setImage(defaultImage);
 });
 
-shuffleTiles();
+setImage(defaultImage);
