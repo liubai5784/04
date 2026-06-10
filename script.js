@@ -1,8 +1,17 @@
 const isAdminPage = document.body.dataset.admin === "true";
 const CONFIG_STORAGE_KEY = "liubai-gallery-config";
 
+const puzzleGame = {
+  title: "照片拼图小游戏",
+  desc: "上传一张图片，打乱成九宫格，点击两个碎片交换位置，把照片拼回原样。",
+  cover: "assets/images/hero.png",
+  tags: ["Puzzle", "照片", "小游戏"],
+  url: "games/puzzle.html"
+};
+
 const defaultConfig = {
   games: [
+    puzzleGame,
     {
       title: "答题练习小程序",
       desc: "适合放概论课、结构力学或英语练习题，后续可以接入你已有的网页小程序。",
@@ -71,11 +80,17 @@ function createPlaceholder(label, className = "") {
   return `<div class="image-placeholder ${className}"><span>${escapeHtml(label)}</span></div>`;
 }
 
-function normalizeConfig(config) {
-  return {
+function ensurePuzzleGame(config) {
+  const normalized = {
     games: Array.isArray(config?.games) ? config.games : defaultConfig.games,
     tools: Array.isArray(config?.tools) ? config.tools : defaultConfig.tools
   };
+  const hasPuzzle = normalized.games.some(item => item?.url === puzzleGame.url || item?.title === puzzleGame.title);
+  return hasPuzzle ? normalized : { ...normalized, games: [puzzleGame, ...normalized.games] };
+}
+
+function normalizeConfig(config) {
+  return ensurePuzzleGame(config);
 }
 
 function readLocalConfig() {
@@ -104,6 +119,8 @@ async function loadSiteConfig() {
     setConfigStatus("已连接站点配置接口。");
   } catch (error) {
     if (!localConfig) siteConfig = structuredClone(defaultConfig);
+    siteConfig = normalizeConfig(siteConfig);
+    writeLocalConfig(siteConfig);
     setConfigStatus("当前使用浏览器本地配置；部署到 Cloudflare 并绑定 D1 后会同步到站点配置。");
   }
 }
@@ -349,244 +366,21 @@ async function loadServerPhotos() {
   renderCounts();
 }
 
-async function compressImage(file, maxSize = 1400, quality = 0.78) {
-  if (!file.type.startsWith("image/")) return file;
-  if (file.type === "image/gif") return file;
-
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-
-  const context = canvas.getContext("2d");
-  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-
-  const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", quality));
-  if (!blob) return file;
-
-  return new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" });
-}
-
-async function imageFileToDataUrl(file, maxSize = 900, quality = 0.76) {
-  const compressed = await compressImage(file, maxSize, quality);
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.addEventListener("load", () => resolve(reader.result));
-    reader.addEventListener("error", () => reject(reader.error));
-    reader.readAsDataURL(compressed);
-  });
-}
-
-async function handlePhotoUpload(event) {
-  event.preventDefault();
-
-  const input = document.querySelector("#photoInput");
-  const titleInput = document.querySelector("#photoTitle");
-  const metaInput = document.querySelector("#photoMeta");
-  const tip = document.querySelector("#uploadTip");
-  const files = Array.from(input.files || []);
-
-  if (!files.length) {
-    tip.textContent = "请先选择至少一张图片。";
-    return;
-  }
-
-  tip.textContent = "正在压缩图片并上传到 Cloudflare D1...";
-
-  try {
-    const formData = new FormData();
-    for (const file of files) {
-      const compressed = await compressImage(file);
-      formData.append("photos", compressed);
-    }
-    formData.append("title", titleInput.value.trim() || "上传照片");
-    formData.append("meta", metaInput.value.trim() || "网页端上传");
-
-    const response = await fetch("/api/photos", {
-      method: "POST",
-      body: formData
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || "上传接口返回错误");
-    }
-
-    const data = await response.json();
-    serverPhotos = data.allPhotos || [];
-    renderPhotos();
-    renderCounts();
-
-    input.value = "";
-    titleInput.value = "";
-    metaInput.value = "";
-    tip.textContent = `已上传 ${files.length} 张照片，并保存到 Cloudflare D1。`;
-  } catch (error) {
-    console.error(error);
-    tip.textContent = `上传失败：${error.message || "请确认 Cloudflare Pages Functions 已启用，并绑定 D1 数据库 PHOTO_DB。"}`;
-  }
-}
-
-function bindUploadPanel() {
-  const form = document.querySelector("#photoUploadForm");
-  const clearButton = document.querySelector("#clearLocalPhotos");
-  const tip = document.querySelector("#uploadTip");
-
-  if (!form || !clearButton) return;
-
-  form.addEventListener("submit", handlePhotoUpload);
-  clearButton.textContent = "刷新 D1 照片";
-  clearButton.addEventListener("click", () => {
-    if (tip) tip.textContent = "正在刷新 D1 照片列表...";
-    loadServerPhotos();
-  });
-}
-
-function renderLinkEditors() {
-  const gamesEditor = document.querySelector("#gamesEditor");
-  const toolsEditor = document.querySelector("#toolsEditor");
-  if (!gamesEditor || !toolsEditor) return;
-
-  gamesEditor.innerHTML = siteConfig.games.map((item, index) => renderGameEditor(item, index)).join("");
-  toolsEditor.innerHTML = siteConfig.tools.map((item, index) => renderToolEditor(item, index)).join("");
-}
-
-function renderGameEditor(item, index) {
-  return `
-    <article class="editor-item" data-type="games" data-index="${index}">
-      <div class="editor-head">
-        <strong>小游戏 ${String(index + 1).padStart(2, "0")}</strong>
-        <button class="editor-remove" type="button" data-action="remove" data-type="games" data-index="${index}">删除</button>
-      </div>
-      <label>标题<input data-field="title" value="${escapeAttribute(item.title || "")}"></label>
-      <label>说明<textarea data-field="desc">${escapeHtml(item.desc || "")}</textarea></label>
-      <label>标签<input data-field="tags" value="${escapeAttribute((item.tags || []).join(", "))}"></label>
-      <label>封面地址<input data-field="cover" value="${escapeAttribute(item.cover || "")}"></label>
-      <label>上传封面<input data-field="coverFile" type="file" accept="image/*"></label>
-      <div class="cover-preview ${item.cover ? "has-cover" : ""}">
-        ${item.cover ? `<img src="${escapeAttribute(item.cover)}" alt="${escapeAttribute(item.title || "封面预览")}">` : `<span>暂无封面</span>`}
-        <button class="editor-remove" type="button" data-action="clear-cover" data-index="${index}">清除封面</button>
-      </div>
-      <label>跳转链接<input data-field="url" value="${escapeAttribute(item.url || "")}"></label>
-    </article>
-  `;
-}
-
-function renderToolEditor(item, index) {
-  return `
-    <article class="editor-item" data-type="tools" data-index="${index}">
-      <div class="editor-head">
-        <strong>工具 ${String(index + 1).padStart(2, "0")}</strong>
-        <button class="editor-remove" type="button" data-action="remove" data-type="tools" data-index="${index}">删除</button>
-      </div>
-      <label>名称<input data-field="name" value="${escapeAttribute(item.name || "")}"></label>
-      <label>说明<textarea data-field="desc">${escapeHtml(item.desc || "")}</textarea></label>
-      <label>跳转链接<input data-field="url" value="${escapeAttribute(item.url || "")}"></label>
-    </article>
-  `;
-}
-
-function collectEditorConfig() {
-  const games = [...document.querySelectorAll('.editor-item[data-type="games"]')].map(item => ({
-    title: item.querySelector('[data-field="title"]').value.trim(),
-    desc: item.querySelector('[data-field="desc"]').value.trim(),
-    tags: parseTags(item.querySelector('[data-field="tags"]').value),
-    cover: item.querySelector('[data-field="cover"]').value.trim(),
-    url: item.querySelector('[data-field="url"]').value.trim() || "#"
-  }));
-
-  const tools = [...document.querySelectorAll('.editor-item[data-type="tools"]')].map(item => ({
-    name: item.querySelector('[data-field="name"]').value.trim(),
-    desc: item.querySelector('[data-field="desc"]').value.trim(),
-    url: item.querySelector('[data-field="url"]').value.trim() || "#"
-  }));
-
-  return { games, tools };
-}
-
-function bindLinkEditor() {
-  const panel = document.querySelector("#linkEditorPanel");
-  if (!panel) return;
-
-  panel.addEventListener("click", event => {
-    const button = event.target.closest("button[data-action]");
-    if (!button) return;
-
-    const nextConfig = collectEditorConfig();
-    if (button.dataset.action === "add-game") {
-      nextConfig.games.push({ title: "新小游戏", desc: "说明文字", tags: ["作品"], cover: "", url: "#" });
-    }
-    if (button.dataset.action === "add-tool") {
-      nextConfig.tools.push({ name: "新工具", desc: "说明文字", url: "#" });
-    }
-    if (button.dataset.action === "remove") {
-      nextConfig[button.dataset.type].splice(Number(button.dataset.index), 1);
-    }
-    if (button.dataset.action === "clear-cover") {
-      nextConfig.games[Number(button.dataset.index)].cover = "";
-    }
-    if (button.dataset.action === "reset") {
-      siteConfig = structuredClone(defaultConfig);
-      writeLocalConfig(siteConfig);
-      renderLinkEditors();
-      renderGames();
-      renderTools();
-      renderNavMenus();
-      bindDisabledLinks();
-      setConfigStatus("已恢复默认入口，点击保存后同步。");
-      return;
-    }
-
-    siteConfig = normalizeConfig(nextConfig);
-    renderLinkEditors();
-  });
-
-  panel.addEventListener("change", async event => {
-    const input = event.target.closest('input[data-field="coverFile"]');
-    if (!input || !input.files?.length) return;
-
-    const editorItem = input.closest('.editor-item[data-type="games"]');
-    const index = Number(editorItem.dataset.index);
-    const nextConfig = collectEditorConfig();
-    setConfigStatus("正在读取封面图片...");
-
-    try {
-      nextConfig.games[index].cover = await imageFileToDataUrl(input.files[0]);
-      siteConfig = normalizeConfig(nextConfig);
-      renderLinkEditors();
-      setConfigStatus("封面已载入，点击保存后生效。");
-    } catch (error) {
-      console.error(error);
-      setConfigStatus("封面读取失败，请换一张图片试试。");
-    }
-  });
-
-  const form = document.querySelector("#linkEditorForm");
-  form?.addEventListener("submit", event => {
-    event.preventDefault();
-    saveSiteConfig(collectEditorConfig());
-  });
-}
-
 function bindDisabledLinks() {
   document.querySelectorAll("a.is-disabled").forEach(link => {
     link.addEventListener("click", event => event.preventDefault());
   });
 }
 
-async function init() {
+async function initSite() {
   await loadSiteConfig();
   renderGames();
   renderPhotos();
   renderTools();
-  renderNavMenus();
   renderCounts();
+  renderNavMenus();
   bindDisabledLinks();
-  renderLinkEditors();
-  bindLinkEditor();
-  bindUploadPanel();
   loadServerPhotos();
 }
 
-init();
+initSite();
