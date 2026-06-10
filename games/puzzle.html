@@ -21,7 +21,16 @@
       <div class="section-title">
         <p class="eyebrow">Puzzle Game</p>
         <h1>照片拼图</h1>
-        <p>上传一张图片，系统会打乱成九宫格。点击两个碎片可以交换位置，把图片拼回原样。</p>
+        <p>上传一张图片，自定义横向和纵向切块数量。可以点击两个碎片交换，也可以直接拖动碎片互换位置。</p>
+      </div>
+      <div class="puzzle-controls">
+        <label>横向切块
+          <input id="puzzleCols" type="number" min="2" max="8" value="3" />
+        </label>
+        <label>纵向切块
+          <input id="puzzleRows" type="number" min="2" max="8" value="3" />
+        </label>
+        <button class="btn ghost" id="applyPuzzleGrid" type="button">应用切块</button>
       </div>
       <div class="hero-actions">
         <label class="btn primary">
@@ -31,7 +40,7 @@
         <button class="btn ghost" id="shufflePuzzle" type="button">重新打乱</button>
         <button class="btn ghost" id="resetPuzzle" type="button">恢复默认图</button>
       </div>
-      <p class="upload-tip" id="puzzleTip">当前使用默认主视觉图。点击碎片交换位置。</p>
+      <p class="upload-tip" id="puzzleTip">当前使用默认主视觉图。可以自定义横向和纵向切块数量。</p>
     </section>
 
     <section class="section-panel puzzle-layout">
@@ -40,7 +49,7 @@
       </div>
       <aside class="puzzle-side">
         <h2>玩法</h2>
-        <p>目标是把九个碎片拼回正确顺序。你可以先看右侧参考图，再通过交换碎片完成拼图。</p>
+        <p>先设置横向、纵向切块数量，再点击“应用切块”。目标是把所有碎片拖回正确顺序。</p>
         <div class="puzzle-preview" id="puzzlePreview"></div>
         <div class="stats-grid puzzle-stats">
           <article><strong id="moveCount">0</strong><span>移动次数</span></article>
