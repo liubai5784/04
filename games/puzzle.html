@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>照片拼图小游戏 / 留白的作品空间</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <div class="site-bg"></div>
+  <header class="topbar">
+    <a class="brand" href="../index.html#home">留白 / 作品空间</a>
+    <nav class="nav" aria-label="拼图导航">
+      <a class="nav-trigger" href="../index.html#games">返回小游戏</a>
+      <a class="nav-trigger" href="../index.html#gallery">照片墙</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="section-panel puzzle-hero">
+      <div class="section-title">
+        <p class="eyebrow">Puzzle Game</p>
+        <h1>照片拼图</h1>
+        <p>上传一张图片，系统会打乱成九宫格。点击两个碎片可以交换位置，把图片拼回原样。</p>
+      </div>
+      <div class="hero-actions">
+        <label class="btn primary">
+          选择图片
+          <input id="puzzleImageInput" type="file" accept="image/*" hidden />
+        </label>
+        <button class="btn ghost" id="shufflePuzzle" type="button">重新打乱</button>
+        <button class="btn ghost" id="resetPuzzle" type="button">恢复默认图</button>
+      </div>
+      <p class="upload-tip" id="puzzleTip">当前使用默认主视觉图。点击碎片交换位置。</p>
+    </section>
+
+    <section class="section-panel puzzle-layout">
+      <div>
+        <div class="puzzle-board" id="puzzleBoard" aria-label="照片拼图区域"></div>
+      </div>
+      <aside class="puzzle-side">
+        <h2>玩法</h2>
+        <p>目标是把九个碎片拼回正确顺序。你可以先看右侧参考图，再通过交换碎片完成拼图。</p>
+        <div class="puzzle-preview" id="puzzlePreview"></div>
+        <div class="stats-grid puzzle-stats">
+          <article><strong id="moveCount">0</strong><span>移动次数</span></article>
+          <article><strong id="puzzleStatus">未完成</strong><span>当前状态</span></article>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <footer class="footer">© 2026 留白 / Puzzle Game</footer>
+
+  <script src="puzzle.js"></script>
+</body>
+</html>
