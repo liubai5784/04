@@ -4,7 +4,7 @@ const CONFIG_STORAGE_KEY = "liubai-gallery-config";
 const puzzleGame = {
   title: "照片拼图小游戏",
   desc: "上传一张图片，打乱成九宫格，点击两个碎片交换位置，把照片拼回原样。",
-  cover: "assets/images/hero.png",
+  cover: "",
   tags: ["Puzzle", "照片", "小游戏"],
   url: "games/puzzle.html"
 };
@@ -80,17 +80,13 @@ function createPlaceholder(label, className = "") {
   return `<div class="image-placeholder ${className}"><span>${escapeHtml(label)}</span></div>`;
 }
 
-function ensurePuzzleGame(config) {
+function normalizeConfig(config) {
   const normalized = {
     games: Array.isArray(config?.games) ? config.games : defaultConfig.games,
     tools: Array.isArray(config?.tools) ? config.tools : defaultConfig.tools
   };
   const hasPuzzle = normalized.games.some(item => item?.url === puzzleGame.url || item?.title === puzzleGame.title);
   return hasPuzzle ? normalized : { ...normalized, games: [puzzleGame, ...normalized.games] };
-}
-
-function normalizeConfig(config) {
-  return ensurePuzzleGame(config);
 }
 
 function readLocalConfig() {
@@ -366,6 +362,103 @@ async function loadServerPhotos() {
   renderCounts();
 }
 
+function renderGameEditor(item, index) {
+  return `
+    <article class="editor-item" data-type="games" data-index="${index}">
+      <div class="editor-head">
+        <strong>小游戏 ${String(index + 1).padStart(2, "0")}</strong>
+        <button class="editor-remove" type="button" data-action="remove" data-type="games" data-index="${index}">删除</button>
+      </div>
+      <label>标题<input data-field="title" value="${escapeAttribute(item.title || "")}"></label>
+      <label>链接<input data-field="url" value="${escapeAttribute(item.url || "")}"></label>
+      <label>封面路径<input data-field="cover" value="${escapeAttribute(item.cover || "")}" placeholder="例如 assets/images/cover.jpg"></label>
+      <label>标签<input data-field="tags" value="${escapeAttribute((item.tags || []).join("，"))}" placeholder="用逗号分隔"></label>
+      <label class="editor-wide">说明<textarea data-field="desc">${escapeHtml(item.desc || "")}</textarea></label>
+    </article>
+  `;
+}
+
+function renderToolEditor(item, index) {
+  return `
+    <article class="editor-item" data-type="tools" data-index="${index}">
+      <div class="editor-head">
+        <strong>工具 ${String(index + 1).padStart(2, "0")}</strong>
+        <button class="editor-remove" type="button" data-action="remove" data-type="tools" data-index="${index}">删除</button>
+      </div>
+      <label>名称<input data-field="name" value="${escapeAttribute(item.name || "")}"></label>
+      <label>链接<input data-field="url" value="${escapeAttribute(item.url || "")}"></label>
+      <label class="editor-wide">说明<textarea data-field="desc">${escapeHtml(item.desc || "")}</textarea></label>
+    </article>
+  `;
+}
+
+function renderLinkEditors() {
+  const gamesEditor = document.querySelector("#gamesEditor");
+  const toolsEditor = document.querySelector("#toolsEditor");
+  if (!gamesEditor || !toolsEditor) return;
+
+  gamesEditor.innerHTML = siteConfig.games.map((item, index) => renderGameEditor(item, index)).join("");
+  toolsEditor.innerHTML = siteConfig.tools.map((item, index) => renderToolEditor(item, index)).join("");
+  bindLinkEditorButtons();
+}
+
+function readEditorConfig() {
+  const games = Array.from(document.querySelectorAll('.editor-item[data-type="games"]')).map(item => ({
+    title: item.querySelector('[data-field="title"]').value.trim() || "未命名小游戏",
+    desc: item.querySelector('[data-field="desc"]').value.trim(),
+    cover: item.querySelector('[data-field="cover"]').value.trim(),
+    tags: parseTags(item.querySelector('[data-field="tags"]').value),
+    url: item.querySelector('[data-field="url"]').value.trim() || "#"
+  }));
+
+  const tools = Array.from(document.querySelectorAll('.editor-item[data-type="tools"]')).map(item => ({
+    name: item.querySelector('[data-field="name"]').value.trim() || "未命名工具",
+    desc: item.querySelector('[data-field="desc"]').value.trim(),
+    url: item.querySelector('[data-field="url"]').value.trim() || "#"
+  }));
+
+  return normalizeConfig({ games, tools });
+}
+
+function bindLinkEditorButtons() {
+  document.querySelectorAll('[data-action="remove"]').forEach(button => {
+    button.addEventListener("click", () => {
+      const type = button.dataset.type;
+      const index = Number(button.dataset.index);
+      siteConfig[type].splice(index, 1);
+      siteConfig = normalizeConfig(siteConfig);
+      renderLinkEditors();
+    });
+  });
+}
+
+function bindLinkEditorForm() {
+  const form = document.querySelector("#linkEditorForm");
+  if (!form) return;
+
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    saveSiteConfig(readEditorConfig());
+  });
+
+  form.querySelector('[data-action="add-game"]')?.addEventListener("click", () => {
+    siteConfig.games.push({ title: "新小游戏", desc: "", cover: "", tags: ["Game"], url: "#" });
+    renderLinkEditors();
+  });
+
+  form.querySelector('[data-action="add-tool"]')?.addEventListener("click", () => {
+    siteConfig.tools.push({ name: "新工具", desc: "", url: "#" });
+    renderLinkEditors();
+  });
+
+  form.querySelector('[data-action="reset"]')?.addEventListener("click", () => {
+    siteConfig = structuredClone(defaultConfig);
+    writeLocalConfig(siteConfig);
+    renderLinkEditors();
+    setConfigStatus("已恢复默认入口，点击保存后同步。");
+  });
+}
+
 function bindDisabledLinks() {
   document.querySelectorAll("a.is-disabled").forEach(link => {
     link.addEventListener("click", event => event.preventDefault());
@@ -380,6 +473,8 @@ async function initSite() {
   renderCounts();
   renderNavMenus();
   bindDisabledLinks();
+  renderLinkEditors();
+  bindLinkEditorForm();
   loadServerPhotos();
 }
 
