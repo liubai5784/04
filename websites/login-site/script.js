@@ -1,5 +1,5 @@
 
-const API = "https://ceshi03.2750018830.workers.dev";
+const API = "/api";
 
 // ================= 注册 =================
 async function register(){
