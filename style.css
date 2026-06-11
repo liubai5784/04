@@ -89,14 +89,23 @@ h2 { font-size: clamp(26px, 3vw, 40px); letter-spacing: -0.04em; margin-bottom: 
 .cover-preview img { display: block; width: 100%; max-height: 180px; object-fit: cover; object-position: center; border-radius: 12px; background: transparent; }
 .editor-remove { border: 1px solid rgba(218,240,250,.24); border-radius: 999px; padding: 7px 12px; color: var(--muted); background: rgba(1,12,22,.38); cursor: pointer; }
 .editor-remove:hover { color: #fff; border-color: rgba(255,255,255,.36); }
-.gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; align-items: start; }
-.photo-card { position: relative; min-height: 220px; }
-.photo-card.has-image { min-height: 0; background: transparent; border: 0; }
-.photo-open { display: block; width: 100%; padding: 0; border: 0; color: inherit; background: transparent; cursor: zoom-in; border-radius: 22px; overflow: hidden; }
-.photo-image { display: block; width: 100%; height: auto; max-height: none; object-fit: cover; object-position: center; background: transparent; border-radius: 22px; box-shadow: 0 18px 60px rgba(0,0,0,.22); }
+.gallery-grid { display: block; column-count: 3; column-gap: 22px; }
+.photo-card { position: relative; min-height: 220px; break-inside: avoid; margin: 0 0 22px; transform: rotate(var(--tilt, 0deg)); }
+.photo-card:nth-child(6n + 1) { --tilt: -1.4deg; }
+.photo-card:nth-child(6n + 2) { --tilt: .9deg; }
+.photo-card:nth-child(6n + 3) { --tilt: -.5deg; }
+.photo-card:nth-child(6n + 4) { --tilt: 1.25deg; }
+.photo-card:nth-child(6n + 5) { --tilt: -.85deg; }
+.photo-card:nth-child(6n + 6) { --tilt: .35deg; }
+.photo-card.has-image { min-height: 0; background: transparent; border: 0; overflow: visible; }
+.photo-card.has-image::after { content: ""; position: absolute; inset: 8px; z-index: -1; border-radius: 26px; background: rgba(150,215,238,.10); filter: blur(22px); transform: translateY(18px); }
+.photo-open { display: block; width: 100%; padding: 0; border: 0; color: inherit; background: transparent; cursor: zoom-in; border-radius: 26px; overflow: hidden; }
+.photo-image { display: block; width: 100%; height: auto; max-height: none; object-fit: cover; object-position: center; background: transparent; border-radius: 26px; box-shadow: 0 22px 70px rgba(0,0,0,.30); filter: saturate(1.06) contrast(1.03); transition: transform .35s ease, filter .35s ease, box-shadow .35s ease; }
+.photo-card:hover { transform: translateY(-8px) rotate(0deg); }
+.photo-card:hover .photo-image { transform: scale(1.025); filter: saturate(1.16) contrast(1.06); box-shadow: 0 28px 90px rgba(0,0,0,.42); }
 .photo-empty { min-height: 260px; }
-.photo-card .photo-title { position: absolute; left: 18px; right: 18px; bottom: 18px; z-index: 2; font-weight: 800; text-shadow: 0 10px 30px rgba(0,20,33,.92); pointer-events: none; }
-.photo-card .photo-meta { display: block; color: var(--muted); font-size: 13px; margin-top: 5px; font-weight: 500; }
+.photo-card .photo-title { position: absolute; left: 16px; right: 16px; bottom: 16px; z-index: 2; padding: 48px 16px 14px; border-radius: 0 0 24px 24px; font-weight: 800; text-shadow: 0 10px 30px rgba(0,20,33,.92); pointer-events: none; background: linear-gradient(to top, rgba(1,12,22,.74), rgba(1,12,22,.22), transparent); }
+.photo-card .photo-meta { display: block; color: rgba(238,249,255,.72); font-size: 13px; margin-top: 5px; font-weight: 500; }
 .photo-remove { position: absolute; top: 12px; right: 12px; z-index: 3; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(218,240,250,.34); background: rgba(1,12,22,.62); color: #fff; font-size: 22px; line-height: 1; cursor: pointer; }
 .lightbox[hidden] { display: none; }
 .lightbox { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 28px; }
@@ -126,13 +135,15 @@ code { color: var(--accent); }
 .puzzle-side { display: grid; gap: 18px; }
 .puzzle-preview { width: 100%; aspect-ratio: 16 / 10; border: 0; border-radius: 22px; background-size: cover; background-position: center; background-repeat: no-repeat; background-color: transparent; box-shadow: 0 18px 60px rgba(0,0,0,.22); }
 .puzzle-stats { grid-template-columns: 1fr; }
+@media (max-width: 1020px) { .gallery-grid { column-count: 2; } }
 @media (max-width: 860px) {
   .hero, .about-panel, .upload-panel { grid-template-columns: 1fr; }
   .large { min-height: 320px; }
   .hero-visual { min-height: 300px; }
   .card-grid, .stats-grid { grid-template-columns: 1fr; }
   .editor-item { grid-template-columns: 1fr; }
-  .gallery-grid { grid-template-columns: 1fr; }
+  .gallery-grid { column-count: 1; }
+  .photo-card { transform: none; }
   .puzzle-layout { grid-template-columns: 1fr; }
   .puzzle-board { width: 100%; }
   .puzzle-tile { min-height: 72px; }
