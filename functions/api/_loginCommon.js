@@ -1,36 +1,42 @@
 const USER_TABLE = "users";
 
+function getDb(env) {
+  return env.PHOTO_DB || env.DB || env.CESHI03 || env.ceshi03 || null;
+}
+
 export function requireDb(env) {
-  if (!env.PHOTO_DB) return jsonResponse({ ok: false, msg: "D1 数据库 PHOTO_DB 尚未配置" }, 500);
+  if (!getDb(env)) return jsonResponse({ ok: false, msg: "D1 数据库尚未配置，请绑定为 PHOTO_DB 或 DB" }, 500);
   return null;
 }
 
 export async function ensureAuthSchema(env) {
-  await env.PHOTO_DB.prepare(
+  const db = getDb(env);
+  await db.prepare(
     `CREATE TABLE IF NOT EXISTS ${USER_TABLE} (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT, token TEXT, avatar TEXT, bio TEXT, msg TEXT)`
   ).run();
 
   const schema = await getUserSchema(env);
   for (const column of ["username", "password", "token", "avatar", "bio", "msg"]) {
     if (!schema.columns.has(column)) {
-      await env.PHOTO_DB.prepare(`ALTER TABLE ${USER_TABLE} ADD COLUMN ${q(column)} TEXT DEFAULT ''`).run();
+      await db.prepare(`ALTER TABLE ${USER_TABLE} ADD COLUMN ${q(column)} TEXT DEFAULT ''`).run();
       schema.columns.add(column);
     }
   }
 
-  await env.PHOTO_DB.prepare(`CREATE INDEX IF NOT EXISTS idx_users_username ON ${USER_TABLE}(username)`).run();
-  await env.PHOTO_DB.prepare(`CREATE INDEX IF NOT EXISTS idx_users_token ON ${USER_TABLE}(token)`).run();
+  await db.prepare(`CREATE INDEX IF NOT EXISTS idx_users_username ON ${USER_TABLE}(username)`).run();
+  await db.prepare(`CREATE INDEX IF NOT EXISTS idx_users_token ON ${USER_TABLE}(token)`).run();
   return await getUserSchema(env);
 }
 
 export async function registerUser(env, username, pass) {
+  const db = getDb(env);
   const schema = await ensureAuthSchema(env);
   assertUserSchema(schema);
 
   const existed = await findUserByUsername(env, username, schema);
   if (existed) return { ok: false, status: 409, msg: "用户名已存在" };
 
-  await env.PHOTO_DB.prepare(
+  await db.prepare(
     `INSERT INTO ${USER_TABLE} (${q(schema.usernameCol)}, ${q(schema.passwordCol)}, ${q(schema.tokenCol)}, ${q(schema.avatarCol)}, ${q(schema.bioCol)}, ${q(schema.msgCol)}) VALUES (?, ?, '', '', '', '')`
   ).bind(username, pass).run();
 
@@ -38,6 +44,7 @@ export async function registerUser(env, username, pass) {
 }
 
 export async function loginUser(env, username, pass) {
+  const db = getDb(env);
   const schema = await ensureAuthSchema(env);
   assertUserSchema(schema);
 
@@ -46,7 +53,7 @@ export async function loginUser(env, username, pass) {
   if (String(row[schema.passwordCol] ?? "") !== pass) return null;
 
   const token = `${crypto.randomUUID()}-${randomHex(16)}`;
-  await env.PHOTO_DB.prepare(
+  await db.prepare(
     `UPDATE ${USER_TABLE} SET ${q(schema.tokenCol)} = ? WHERE ${q(schema.usernameCol)} = ?`
   ).bind(token, username).run();
 
@@ -57,9 +64,10 @@ export async function getUserByToken(env, token) {
   const safeToken = String(token || "").trim();
   if (!safeToken) return null;
 
+  const db = getDb(env);
   const schema = await ensureAuthSchema(env);
   assertUserSchema(schema);
-  const row = await env.PHOTO_DB.prepare(
+  const row = await db.prepare(
     `SELECT * FROM ${USER_TABLE} WHERE ${q(schema.tokenCol)} = ? LIMIT 1`
   ).bind(safeToken).first();
 
@@ -67,6 +75,7 @@ export async function getUserByToken(env, token) {
 }
 
 export async function updateCurrentUserField(env, token, field, value) {
+  const db = getDb(env);
   const user = await getUserByToken(env, token);
   if (!user) return null;
 
@@ -75,7 +84,7 @@ export async function updateCurrentUserField(env, token, field, value) {
   const targetCol = fieldMap[field];
   if (!targetCol) throw new Error(`users 表中找不到 ${field} 字段`);
 
-  await env.PHOTO_DB.prepare(
+  await db.prepare(
     `UPDATE ${USER_TABLE} SET ${q(targetCol)} = ? WHERE ${q(schema.usernameCol)} = ?`
   ).bind(String(value || ""), user.username).run();
 
@@ -83,10 +92,11 @@ export async function updateCurrentUserField(env, token, field, value) {
 }
 
 export async function listUsers(env) {
+  const db = getDb(env);
   const schema = await ensureAuthSchema(env);
   assertUserSchema(schema);
   const orderCol = schema.idCol || schema.usernameCol;
-  const { results } = await env.PHOTO_DB.prepare(`SELECT * FROM ${USER_TABLE} ORDER BY ${q(orderCol)} DESC`).all();
+  const { results } = await db.prepare(`SELECT * FROM ${USER_TABLE} ORDER BY ${q(orderCol)} DESC`).all();
   return (results || []).map(row => normalizeUser(row, schema));
 }
 
@@ -110,7 +120,8 @@ export function corsHeaders() {
 }
 
 async function getUserSchema(env) {
-  const { results } = await env.PHOTO_DB.prepare(`PRAGMA table_info(${USER_TABLE})`).all();
+  const db = getDb(env);
+  const { results } = await db.prepare(`PRAGMA table_info(${USER_TABLE})`).all();
   const columns = new Set((results || []).map(col => col.name));
   return {
     columns,
@@ -132,7 +143,8 @@ function assertUserSchema(schema) {
 }
 
 async function findUserByUsername(env, username, schema) {
-  return await env.PHOTO_DB.prepare(
+  const db = getDb(env);
+  return await db.prepare(
     `SELECT * FROM ${USER_TABLE} WHERE ${q(schema.usernameCol)} = ? LIMIT 1`
   ).bind(username).first();
 }
