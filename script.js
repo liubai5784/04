@@ -35,7 +35,7 @@ const defaultConfig = {
     }
   ],
   tools: [
-    { name: "公式速查", desc: "结构力学、大物、考试前速看公式卡片。", url: "#" },
+    { name: "GPT 跳转", desc: "快速打开 ChatGPT，继续和我聊天。", url: "https://chatgpt.com/" },
     { name: "考试急救卡", desc: "临考前按章节整理重点、易错点和题型。", url: "#" },
     { name: "图片提示词库", desc: "保存 Warma、工地、油画风等常用提示词。", url: "#" }
   ]
