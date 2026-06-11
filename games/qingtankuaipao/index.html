@@ -53,11 +53,12 @@
 
       const newGroundDraw = `        var g = images.ground;
         if (g && g.complete && g.naturalWidth > 0) {
-            var tileH = GROUND_H;
-            var tileW = Math.max(80, Math.round(g.naturalWidth * (tileH / g.naturalHeight)));
+            var tileW = g.naturalWidth;
+            var tileH = g.naturalHeight;
+            var drawY = GROUND_Y + GROUND_H - tileH;
             var offset = groundOffset % tileW;
             for (var gx = -offset; gx < WIDTH + tileW; gx += tileW) {
-                ctx.drawImage(g, gx, GROUND_Y, tileW, tileH);
+                ctx.drawImage(g, gx, drawY);
             }
         } else {`;
 
