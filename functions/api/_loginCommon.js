@@ -1,11 +1,13 @@
 const USER_TABLE = "users";
 
 function getDb(env) {
-  return env.PHOTO_DB || env.DB || env.CESHI03 || env.ceshi03 || null;
+  // 注册系统优先使用从 ceshi03 接进来的旧数据库。
+  // PHOTO_DB 可能还是主站原来的数据库，放最后避免误读新库。
+  return env.CESHI03 || env.ceshi03 || env.DB || env.PHOTO_DB || null;
 }
 
 export function requireDb(env) {
-  if (!getDb(env)) return jsonResponse({ ok: false, msg: "D1 数据库尚未配置，请绑定为 PHOTO_DB 或 DB" }, 500);
+  if (!getDb(env)) return jsonResponse({ ok: false, msg: "D1 数据库尚未配置，请绑定为 CESHI03、DB 或 PHOTO_DB" }, 500);
   return null;
 }
 
