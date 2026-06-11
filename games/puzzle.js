@@ -10,7 +10,7 @@ const colsInput = document.querySelector("#puzzleCols");
 const rowsInput = document.querySelector("#puzzleRows");
 const applyGridButton = document.querySelector("#applyPuzzleGrid");
 
-const defaultImage = "../assets/images/hero.png";
+const defaultImage = "../images/hero.png";
 let cols = 3;
 let rows = 3;
 let imageUrl = defaultImage;
