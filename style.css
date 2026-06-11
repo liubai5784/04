@@ -135,9 +135,23 @@ code { color: var(--accent); }
 .puzzle-side { display: grid; gap: 18px; }
 .puzzle-preview { width: 100%; aspect-ratio: 16 / 10; border: 0; border-radius: 22px; background-size: cover; background-position: center; background-repeat: no-repeat; background-color: transparent; box-shadow: 0 18px 60px rgba(0,0,0,.22); }
 .puzzle-stats { grid-template-columns: 1fr; }
+.museum-section { position: relative; overflow: hidden; }
+.museum-section::before { content: ""; position: absolute; inset: 24px; z-index: -1; border-radius: 30px; background: radial-gradient(circle at 50% 0%, rgba(85,194,239,.20), transparent 44%); pointer-events: none; }
+.museum-exhibit { display: grid; grid-template-columns: minmax(320px, 1.05fr) .95fr; gap: 28px; align-items: center; }
+.museum-frame { position: relative; padding: 18px; border: 1px solid rgba(214,238,248,.24); border-radius: 28px; background: linear-gradient(180deg, rgba(238,249,255,.10), rgba(190,231,248,.035)); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 28px 90px rgba(0,0,0,.30); }
+.museum-frame::after { content: ""; position: absolute; left: 18%; right: 18%; bottom: -18px; height: 16px; border-radius: 50%; background: rgba(0,0,0,.38); filter: blur(12px); }
+.museum-browser { height: 38px; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-radius: 16px 16px 0 0; background: rgba(1,12,22,.72); border: 1px solid rgba(218,240,250,.16); border-bottom: 0; }
+.museum-browser span { width: 10px; height: 10px; border-radius: 50%; background: rgba(238,249,255,.34); }
+.museum-page-preview { min-height: 240px; display: grid; align-content: center; gap: 12px; padding: 38px; border: 1px solid rgba(218,240,250,.16); border-radius: 0 0 18px 18px; background: #fff; color: #111; font-family: serif; }
+.museum-page-preview h3 { margin: 0; font-size: clamp(24px, 3vw, 42px); line-height: 1.18; color: #111; letter-spacing: 0; }
+.museum-page-preview p { margin: 0; color: #222; font-size: 16px; line-height: 1.8; }
+.museum-label { position: relative; padding: 24px; border-left: 3px solid rgba(85,194,239,.55); border-radius: 22px; background: rgba(1,12,22,.28); }
+.museum-label h3 { margin: 0 0 12px; font-size: clamp(24px, 3vw, 38px); letter-spacing: -0.04em; }
+.museum-label p { color: var(--muted); line-height: 1.75; }
+.museum-label .tool-link { display: inline-flex; margin-top: 18px; font-weight: 800; color: var(--accent); opacity: 1; }
 @media (max-width: 1020px) { .gallery-grid { column-count: 2; } }
 @media (max-width: 860px) {
-  .hero, .about-panel, .upload-panel { grid-template-columns: 1fr; }
+  .hero, .about-panel, .upload-panel, .museum-exhibit { grid-template-columns: 1fr; }
   .large { min-height: 320px; }
   .hero-visual { min-height: 300px; }
   .card-grid, .stats-grid { grid-template-columns: 1fr; }
