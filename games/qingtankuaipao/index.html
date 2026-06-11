@@ -36,6 +36,15 @@
     const SOURCE_ASSETS = "https://raw.githubusercontent.com/liubai5784/qingtankuaipao/main/public/assets/";
 
     function patchGround(html) {
+      const oldGroundUpdate = `        groundOffset = (groundOffset + gameSpeed) % WIDTH;`;
+      const newGroundUpdate = `        var worldSpeed = gameSpeed;
+        groundOffset += worldSpeed;`;
+
+      const oldObstacleMove = `        for (var i = 0; i < obstacles.length; i++) obstacles[i].x -= gameSpeed;
+        for (var j = 0; j < pickups.length; j++) pickups[j].x -= gameSpeed;`;
+      const newObstacleMove = `        for (var i = 0; i < obstacles.length; i++) obstacles[i].x -= worldSpeed;
+        for (var j = 0; j < pickups.length; j++) pickups[j].x -= worldSpeed;`;
+
       const oldGroundDraw = `        var g = images.ground;
         if (g && g.complete && g.naturalWidth > 0) {
             ctx.drawImage(g, -groundOffset, GROUND_Y, WIDTH, GROUND_H);
@@ -53,7 +62,8 @@
         } else {`;
 
       return html
-        .replace("groundOffset = (groundOffset + gameSpeed) % WIDTH;", "groundOffset += gameSpeed;")
+        .replace(oldGroundUpdate, newGroundUpdate)
+        .replace(oldObstacleMove, newObstacleMove)
         .replace(oldGroundDraw, newGroundDraw);
     }
 
