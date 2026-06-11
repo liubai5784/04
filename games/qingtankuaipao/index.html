@@ -35,13 +35,35 @@
     const SOURCE_HTML = "https://raw.githubusercontent.com/liubai5784/qingtankuaipao/main/public/index.html";
     const SOURCE_ASSETS = "https://raw.githubusercontent.com/liubai5784/qingtankuaipao/main/public/assets/";
 
+    function patchGround(html) {
+      const oldGroundDraw = `        var g = images.ground;
+        if (g && g.complete && g.naturalWidth > 0) {
+            ctx.drawImage(g, -groundOffset, GROUND_Y, WIDTH, GROUND_H);
+            ctx.drawImage(g, WIDTH - groundOffset, GROUND_Y, WIDTH, GROUND_H);
+        } else {`;
+
+      const newGroundDraw = `        var g = images.ground;
+        if (g && g.complete && g.naturalWidth > 0) {
+            var tileH = GROUND_H;
+            var tileW = Math.max(80, Math.round(g.naturalWidth * (tileH / g.naturalHeight)));
+            var offset = groundOffset % tileW;
+            for (var gx = -offset; gx < WIDTH + tileW; gx += tileW) {
+                ctx.drawImage(g, gx, GROUND_Y, tileW, tileH);
+            }
+        } else {`;
+
+      return html
+        .replace("groundOffset = (groundOffset + gameSpeed) % WIDTH;", "groundOffset += gameSpeed;")
+        .replace(oldGroundDraw, newGroundDraw);
+    }
+
     async function loadGame() {
       document.getElementById("errorText").style.display = "none";
       try {
         const response = await fetch(SOURCE_HTML, { cache: "no-store" });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         let html = await response.text();
-        html = html
+        html = patchGround(html)
           .replace(/<title>.*?<\/title>/i, "<title>轻坦快跑 · 留白的作品空间</title>")
           .replaceAll("./assets/", SOURCE_ASSETS)
           .replaceAll("'./assets/", "'" + SOURCE_ASSETS)
