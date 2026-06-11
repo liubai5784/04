@@ -1,0 +1,66 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #f2f2f2;
+  text-align: center;
+  padding-top: 80px;
+}
+
+h2 {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+input {
+  display: block;
+  margin: 10px auto;
+  padding: 10px;
+  width: 220px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+button {
+  margin: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  background: #4CAF50;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #45a049;
+}
+
+#msg {
+  margin-top: 20px;
+  font-size: 16px;
+  color: #333;
+}
+
+.pwd-box{
+  position:relative;
+}
+
+.pwd-box input{
+  width:100%;
+  padding:10px;
+  padding-right:60px;
+  border-radius:8px;
+  border:none;
+  background:#0b1220;
+  color:white;
+}
+
+#eyeBtn{
+  position:absolute;
+  right:6px;
+  top:50%;
+  transform:translateY(-50%);
+  border:none;
+  background:transparent;
+  color:#93c5fd;
+  cursor:pointer;
+  font-size:12px;
+}
