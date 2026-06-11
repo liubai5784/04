@@ -36,8 +36,8 @@ const defaultConfig = {
   ],
   tools: [
     { name: "GPT 跳转", desc: "快速打开 ChatGPT，继续和我聊天。", url: "https://chatgpt.com/" },
-    { name: "考试急救卡", desc: "临考前按章节整理重点、易错点和题型。", url: "#" },
-    { name: "图片提示词库", desc: "保存 Warma、工地、油画风等常用提示词。", url: "#" }
+    { name: "Cloudflare 跳转", desc: "打开 Cloudflare 控制台，管理 Pages 部署和 D1 数据库。", url: "https://dash.cloudflare.com/" },
+    { name: "GitHub 跳转", desc: "打开 GitHub，查看和管理网站代码仓库。", url: "https://github.com/liubai5784/04" }
   ]
 };
 
