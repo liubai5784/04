@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>用户主页</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#0f172a;
+  color:#e2e8f0;
+}
+
+.container{
+  max-width:500px;
+  margin:40px auto;
+  padding:20px;
+}
+
+.card{
+  background:#111827;
+  padding:20px;
+  border-radius:14px;
+  margin-bottom:16px;
+}
+
+.avatar{
+  width:80px;
+  height:80px;
+  border-radius:50%;
+  display:block;
+  margin-bottom:10px;
+}
+
+input,textarea{
+  width:100%;
+  padding:10px;
+  margin:6px 0;
+  border-radius:8px;
+  border:none;
+  background:#0b1220;
+  color:white;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.primary{background:#3b82f6;color:white;}
+.danger{background:#ef4444;color:white;}
+
+.small{
+  font-size:13px;
+  color:#94a3b8;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="card">
+    <img id="avatar" class="avatar">
+    <h2 id="name"></h2>
+
+    <input type="file" id="file">
+    <button class="primary" onclick="uploadAvatar()">上传头像</button>
+  </div>
+
+  <div class="card">
+    <h3>个人简介</h3>
+    <textarea id="bio" rows="3"></textarea>
+    <button class="primary" onclick="saveBio()">保存简介</button>
+  </div>
+
+  <div class="card">
+    <h3>想对作者说的话</h3>
+    <textarea id="msg" rows="3"></textarea>
+    <button class="primary" onclick="saveMsg()">保存留言</button>
+  </div>
+
+  <button class="danger" onclick="logout()">退出登录</button>
+
+  <p class="small" id="tip"></p>
+
+</div>
+
+<script>
+const API = "/api";
+
+const token = localStorage.getItem("token");
+const user = localStorage.getItem("user");
+
+// ================= 防未登录 =================
+if(!token){
+  location.href = "index.html";
+}
+
+// ================= 加载用户信息 =================
+async function load(){
+
+  const res = await fetch(API + "/me",{
+    headers:{Authorization:token}
+  });
+
+  const d = await res.json();
+
+  if(!d.ok){
+    logout();
+    return;
+  }
+
+  name.innerText = d.user;
+
+  avatar.src = d.avatar ||
+    "https://api.dicebear.com/7.x/identicon/svg?seed="+d.user;
+
+  bio.value = d.bio || "";
+  msg.value = d.msg || "";
+}
+
+load();
+
+
+// ================= 上传头像 =================
+function uploadAvatar(){
+
+  const file = document.getElementById("file").files[0];
+  if(!file){
+    tip.innerText = "请选择图片";
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = async () => {
+
+    const base64 = reader.result;
+
+    await fetch(API+"/avatar",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({token,avatar:base64})
+    });
+
+    avatar.src = base64;
+    tip.innerText = "头像更新成功";
+  };
+
+  reader.readAsDataURL(file);
+}
+
+
+// ================= 保存简介 =================
+async function saveBio(){
+
+  await fetch(API+"/bio",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({token,bio:bio.value})
+  });
+
+  tip.innerText = "简介已保存";
+}
+
+
+// ================= 保存留言 =================
+async function saveMsg(){
+
+  await fetch(API+"/msg",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({token,msg:msg.value})
+  });
+
+  tip.innerText = "留言已保存";
+}
+
+
+// ================= 退出 =================
+function logout(){
+  localStorage.clear();
+  location.href = "index.html";
+}
+</script>
+
+</body>
+</html>
