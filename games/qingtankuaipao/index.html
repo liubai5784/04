@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>轻坦快跑 · 留白的作品空间</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: #090812; color: #f8efe3; font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+    .loading { min-height: 100vh; display: grid; place-items: center; padding: 28px; text-align: center; background: radial-gradient(circle at 30% 20%, rgba(255, 222, 173, 0.16), transparent 34%), radial-gradient(circle at 76% 70%, rgba(255, 168, 120, 0.14), transparent 36%), #090812; }
+    .panel { width: min(560px, 92vw); padding: 28px; border: 1px solid rgba(255,255,255,.16); border-radius: 26px; background: rgba(255,255,255,.08); box-shadow: 0 24px 80px rgba(0,0,0,.35); backdrop-filter: blur(18px); }
+    h1 { margin: 0 0 10px; font-size: clamp(30px, 8vw, 52px); }
+    p { margin: 8px 0 0; color: rgba(248,239,227,.76); line-height: 1.7; }
+    .btn-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 22px; }
+    a, button { border: 0; border-radius: 999px; padding: 11px 18px; background: rgba(255,255,255,.13); color: #fff; text-decoration: none; font: inherit; cursor: pointer; }
+    .primary { background: linear-gradient(135deg, #ffca7a, #ff8f70); color: #211308; font-weight: 700; }
+    .error { display: none; margin-top: 18px; color: #ffd0c8; }
+  </style>
+</head>
+<body>
+  <main class="loading" id="loadingScreen">
+    <section class="panel">
+      <h1>轻坦快跑</h1>
+      <p>正在把之前的小游戏接入作品空间。</p>
+      <p>横屏体验最好：空格/点击跳跃，Shift 主防，P/ESC 暂停。</p>
+      <div class="btn-row">
+        <a href="../../index.html#games">返回作品空间</a>
+        <button class="primary" type="button" id="retryBtn">重新加载</button>
+      </div>
+      <p class="error" id="errorText">加载失败。可以稍后重试，或检查 GitHub raw 资源访问。</p>
+    </section>
+  </main>
+
+  <script>
+    const SOURCE_HTML = "https://raw.githubusercontent.com/liubai5784/qingtankuaipao/main/public/index.html";
+    const SOURCE_ASSETS = "https://raw.githubusercontent.com/liubai5784/qingtankuaipao/main/public/assets/";
+
+    async function loadGame() {
+      document.getElementById("errorText").style.display = "none";
+      try {
+        const response = await fetch(SOURCE_HTML, { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        let html = await response.text();
+        html = html
+          .replace(/<title>.*?<\/title>/i, "<title>轻坦快跑 · 留白的作品空间</title>")
+          .replaceAll("./assets/", SOURCE_ASSETS)
+          .replaceAll("'./assets/", "'" + SOURCE_ASSETS)
+          .replaceAll('"./assets/', '"' + SOURCE_ASSETS);
+        document.open();
+        document.write(html);
+        document.close();
+      } catch (error) {
+        console.error(error);
+        document.getElementById("errorText").style.display = "block";
+      }
+    }
+
+    document.getElementById("retryBtn").addEventListener("click", loadGame);
+    loadGame();
+  </script>
+</body>
+</html>
