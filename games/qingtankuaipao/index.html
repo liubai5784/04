@@ -32,46 +32,45 @@
   </main>
 
   <script>
-    const SOURCE_HTML = "https://raw.githubusercontent.com/liubai5784/qingtankuaipao/main/public/index.html";
+    const SOURCE_HTML = "https://raw.githubusercontent.com/liubai5784/qingtankuaipao/main/public/index.html?v=ground-tile-2";
     const SOURCE_ASSETS = "https://raw.githubusercontent.com/liubai5784/qingtankuaipao/main/public/assets/";
 
     function patchGround(html) {
-      const oldGroundUpdate = `        groundOffset = (groundOffset + gameSpeed) % WIDTH;`;
-      const newGroundUpdate = `        var worldSpeed = gameSpeed;
-        groundOffset += worldSpeed;`;
+      html = html.replace(
+        /groundOffset\s*=\s*\(groundOffset\s*\+\s*gameSpeed\)\s*%\s*WIDTH\s*;/,
+        "var worldSpeed = gameSpeed;\n        groundOffset += worldSpeed;"
+      );
 
-      const oldObstacleMove = `        for (var i = 0; i < obstacles.length; i++) obstacles[i].x -= gameSpeed;
-        for (var j = 0; j < pickups.length; j++) pickups[j].x -= gameSpeed;`;
-      const newObstacleMove = `        for (var i = 0; i < obstacles.length; i++) obstacles[i].x -= worldSpeed;
-        for (var j = 0; j < pickups.length; j++) pickups[j].x -= worldSpeed;`;
+      html = html.replace(
+        /for \(var i = 0; i < obstacles\.length; i\+\+\) obstacles\[i\]\.x -= gameSpeed;\s*for \(var j = 0; j < pickups\.length; j\+\+\) pickups\[j\]\.x -= gameSpeed;/,
+        "for (var i = 0; i < obstacles.length; i++) obstacles[i].x -= worldSpeed;\n        for (var j = 0; j < pickups.length; j++) pickups[j].x -= worldSpeed;"
+      );
 
-      const oldGroundDraw = `        var g = images.ground;
+      const tiledGroundDraw = `var g = images.ground;
         if (g && g.complete && g.naturalWidth > 0) {
-            ctx.drawImage(g, -groundOffset, GROUND_Y, WIDTH, GROUND_H);
-            ctx.drawImage(g, WIDTH - groundOffset, GROUND_Y, WIDTH, GROUND_H);
-        } else {`;
-
-      const newGroundDraw = `        var g = images.ground;
-        if (g && g.complete && g.naturalWidth > 0) {
-            var tileW = g.naturalWidth;
-            var tileH = g.naturalHeight;
-            var drawY = GROUND_Y + GROUND_H - tileH;
+            var sourceW = g.naturalWidth || g.width;
+            var sourceH = g.naturalHeight || g.height;
+            var tileH = GROUND_H;
+            var tileW = sourceW * (tileH / sourceH);
+            if (!isFinite(tileW) || tileW <= 0) tileW = GROUND_H;
             var offset = groundOffset % tileW;
             for (var gx = -offset; gx < WIDTH + tileW; gx += tileW) {
-                ctx.drawImage(g, gx, drawY);
+                ctx.drawImage(g, gx, GROUND_Y, tileW, tileH);
             }
         } else {`;
 
-      return html
-        .replace(oldGroundUpdate, newGroundUpdate)
-        .replace(oldObstacleMove, newObstacleMove)
-        .replace(oldGroundDraw, newGroundDraw);
+      html = html.replace(
+        /var g = images\.ground;\s*if \(g && g\.complete && g\.naturalWidth > 0\) \{\s*ctx\.drawImage\(g, -groundOffset, GROUND_Y, WIDTH, GROUND_H\);\s*ctx\.drawImage\(g, WIDTH - groundOffset, GROUND_Y, WIDTH, GROUND_H\);\s*\} else \{/,
+        tiledGroundDraw
+      );
+
+      return html;
     }
 
     async function loadGame() {
       document.getElementById("errorText").style.display = "none";
       try {
-        const response = await fetch(SOURCE_HTML, { cache: "no-store" });
+        const response = await fetch(SOURCE_HTML, { cache: "reload" });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         let html = await response.text();
         html = patchGround(html)
