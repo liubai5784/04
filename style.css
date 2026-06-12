@@ -160,7 +160,7 @@ code { color: var(--accent); }
   .nav { width: 100%; align-items: center; gap: 4px; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 0; -webkit-overflow-scrolling: touch; }
   .nav-item { flex: 0 0 auto; }
   .nav-trigger { min-height: 26px; padding: 0 8px; font-size: 13px; }
-  .nav-menu { position: static; margin-top: 3px; min-width: 150px; max-width: calc(100vw - 40px); }
+  .nav-menu { display: none !important; }
   .section-panel { padding: 20px; border-radius: 24px; margin-bottom: 18px; }
   .hero.section-panel { display: none; }
   .hero, .about-panel, .upload-panel, .museum-exhibit { grid-template-columns: 1fr; }
