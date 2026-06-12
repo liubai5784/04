@@ -1,0 +1,84 @@
+/* Mobile portrait compact override */
+@media (max-width: 860px) {
+  .topbar {
+    padding: 8px 14px !important;
+    gap: 6px !important;
+  }
+
+  .brand {
+    font-size: 16px !important;
+    line-height: 1.2 !important;
+  }
+
+  .nav {
+    width: 100% !important;
+    max-height: 34px !important;
+    align-items: center !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 0 !important;
+  }
+
+  .nav-trigger {
+    min-height: 28px !important;
+    padding: 0 8px !important;
+    font-size: 13px !important;
+  }
+
+  .nav-menu {
+    display: none !important;
+  }
+
+  main {
+    width: min(100% - 24px, 1180px) !important;
+    padding-top: 10px !important;
+  }
+
+  .hero.section-panel {
+    display: block !important;
+    min-height: 0 !important;
+    padding: 14px 16px !important;
+    margin-bottom: 14px !important;
+    border-radius: 20px !important;
+  }
+
+  .hero-copy {
+    display: block !important;
+  }
+
+  .hero .eyebrow,
+  .hero .hero-desc,
+  .hero .hero-actions,
+  .hero .hero-visual {
+    display: none !important;
+  }
+
+  .hero h1 {
+    display: block !important;
+    margin: 0 !important;
+    font-size: 24px !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.03em !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .topbar {
+    padding: 7px 12px !important;
+  }
+
+  main {
+    width: min(100% - 20px, 1180px) !important;
+    padding-top: 8px !important;
+  }
+
+  .hero.section-panel {
+    padding: 12px 14px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .hero h1 {
+    font-size: 22px !important;
+  }
+}
