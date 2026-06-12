@@ -1,13 +1,13 @@
 export async function onRequestDelete(context) {
   const { params, env } = context;
 
-  const missing = checkBindings(env);
-  if (missing) return missing;
+  const db = getPhotoDB(env);
+  if (!db) return missingBindingResponse();
 
-  await ensureSchema(env);
+  await ensureSchema(db);
 
   const id = params.id;
-  const target = await env.PHOTO_DB.prepare(
+  const target = await db.prepare(
     `SELECT id FROM photos WHERE id = ?`
   ).bind(id).first();
 
@@ -15,9 +15,9 @@ export async function onRequestDelete(context) {
     return jsonResponse({ error: "Photo not found." }, 404);
   }
 
-  await env.PHOTO_DB.prepare(`DELETE FROM photos WHERE id = ?`).bind(id).run();
+  await db.prepare(`DELETE FROM photos WHERE id = ?`).bind(id).run();
 
-  const { results } = await env.PHOTO_DB.prepare(
+  const { results } = await db.prepare(
     `SELECT id, title, meta, image_data AS image, size, type, created_at AS createdAt
      FROM photos
      ORDER BY created_at DESC`
@@ -26,15 +26,16 @@ export async function onRequestDelete(context) {
   return jsonResponse({ deleted: id, allPhotos: results || [] });
 }
 
-function checkBindings(env) {
-  if (!env.PHOTO_DB) {
-    return jsonResponse({ error: "D1 binding PHOTO_DB is not configured." }, 500);
-  }
-  return null;
+function getPhotoDB(env) {
+  return env.PHOTO_DB || env.CESHI03 || env.ceshi03 || env.DB || null;
 }
 
-async function ensureSchema(env) {
-  await env.PHOTO_DB.prepare(
+function missingBindingResponse() {
+  return jsonResponse({ error: "D1 绑定未配置，请绑定 PHOTO_DB、CESHI03 或 DB。" }, 500);
+}
+
+async function ensureSchema(db) {
+  await db.prepare(
     `CREATE TABLE IF NOT EXISTS photos (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
