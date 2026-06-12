@@ -149,22 +149,68 @@ code { color: var(--accent); }
 .museum-label h3 { margin: 0 0 12px; font-size: clamp(24px, 3vw, 38px); letter-spacing: -0.04em; }
 .museum-label p { color: var(--muted); line-height: 1.75; }
 .museum-label .tool-link { display: inline-flex; margin-top: 18px; font-weight: 800; color: var(--accent); opacity: 1; }
-@media (max-width: 1020px) { .gallery-grid { column-count: 2; } }
+@media (max-width: 1020px) {
+  .gallery-grid { column-count: 2; }
+  .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 860px) {
+  main { width: min(100% - 28px, 1180px); padding: 28px 0 46px; }
+  .topbar { align-items: flex-start; flex-direction: column; gap: 10px; padding: 14px 18px; }
+  .brand { font-size: 14px; }
+  .nav { width: 100%; align-items: flex-start; gap: 6px; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+  .nav-item { flex: 0 0 auto; }
+  .nav-trigger { min-height: 32px; padding: 0 10px; font-size: 13px; }
+  .nav-menu { position: static; margin-top: 4px; min-width: 160px; max-width: calc(100vw - 40px); }
+  .section-panel { padding: 20px; border-radius: 24px; margin-bottom: 20px; }
   .hero, .about-panel, .upload-panel, .museum-exhibit { grid-template-columns: 1fr; }
-  .large { min-height: 320px; }
-  .hero-visual { min-height: 300px; }
-  .card-grid, .stats-grid { grid-template-columns: 1fr; }
-  .editor-item { grid-template-columns: 1fr; }
+  .hero { min-height: auto; gap: 20px; }
+  h1 { font-size: clamp(34px, 12vw, 50px); letter-spacing: -0.04em; }
+  h2 { font-size: clamp(24px, 8vw, 34px); }
+  .hero-desc { font-size: 15px; line-height: 1.75; }
+  .hero-actions .btn { flex: 1 1 160px; }
+  .large, .hero-visual { min-height: 0; aspect-ratio: 4 / 3; border-radius: 22px; background-position: center 40% !important; }
+  .card-grid, .stats-grid { grid-template-columns: 1fr; gap: 14px; }
+  .stats-grid article { padding: 18px; }
+  .stats-grid strong { font-size: 28px; }
+  .card-cover { height: 158px; }
+  .project-card, .photo-card, .tool-item { border-radius: 20px; }
   .gallery-grid { column-count: 1; }
-  .photo-card { transform: none; }
+  .photo-card { transform: none; margin-bottom: 16px; min-height: 0; }
+  .photo-card:hover { transform: none; }
+  .photo-card .photo-title { left: 10px; right: 10px; bottom: 10px; padding: 42px 12px 12px; }
+  .photo-image, .photo-open { border-radius: 20px; }
+  .tool-item { grid-template-columns: 1fr; align-items: start; gap: 10px; }
+  .tool-index { width: 40px; height: 40px; }
+  .editor-item { grid-template-columns: 1fr; padding: 14px; }
   .puzzle-layout { grid-template-columns: 1fr; }
   .puzzle-board { width: 100%; }
-  .puzzle-tile { min-height: 72px; }
-  .topbar { align-items: flex-start; flex-direction: column; }
-  .nav { align-items: flex-start; }
-  .nav-menu { position: static; margin-top: 4px; min-width: 180px; }
+  .puzzle-tile { min-height: 54px; }
+  .puzzle-preview { aspect-ratio: 4 / 3; }
+  .museum-frame { padding: 12px; border-radius: 22px; }
+  .museum-page-preview { min-height: 190px; padding: 24px; }
+  .museum-label { padding: 20px; }
   .version-strip { align-items: flex-start; flex-direction: column; }
   .lightbox { padding: 14px; }
   .lightbox-close { top: 8px; right: 8px; }
+}
+@media (max-width: 520px) {
+  main { width: min(100% - 22px, 1180px); padding: 20px 0 38px; }
+  .topbar { padding: 12px 14px; }
+  .section-panel { padding: 16px; border-radius: 20px; }
+  .hero { gap: 16px; }
+  h1 { font-size: clamp(32px, 13vw, 44px); margin-bottom: 16px; }
+  h2 { font-size: clamp(22px, 8.5vw, 30px); }
+  .hero-actions { gap: 10px; }
+  .hero-actions .btn, .btn { width: 100%; min-height: 44px; }
+  .large, .hero-visual { aspect-ratio: 1 / 1; border-radius: 18px; }
+  .card-cover { height: 142px; }
+  .card-body { padding: 15px; }
+  .upload-panel { padding: 14px; }
+  .upload-drop { min-height: 110px; }
+  .lightbox-panel { width: 100%; }
+  .lightbox-image { max-height: calc(92vh - 120px); }
+  .museum-browser { height: 32px; border-radius: 12px 12px 0 0; }
+  .museum-page-preview { min-height: 160px; padding: 18px; }
+  .museum-page-preview h3 { font-size: clamp(22px, 8vw, 30px); }
+  .museum-frame::after { display: none; }
 }
