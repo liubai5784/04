@@ -1,11 +1,11 @@
 export async function onRequestGet(context) {
   const { env } = context;
-  const missing = checkBindings(env);
-  if (missing) return missing;
+  const db = getPhotoDB(env);
+  if (!db) return missingBindingResponse();
 
-  await ensureSchema(env);
+  await ensureSchema(db);
 
-  const { results } = await env.PHOTO_DB.prepare(
+  const { results } = await db.prepare(
     `SELECT id, title, meta, image_data AS image, size, type, created_at AS createdAt
      FROM photos
      ORDER BY created_at DESC`
@@ -16,10 +16,10 @@ export async function onRequestGet(context) {
 
 export async function onRequestPost(context) {
   const { request, env } = context;
-  const missing = checkBindings(env);
-  if (missing) return missing;
+  const db = getPhotoDB(env);
+  if (!db) return missingBindingResponse();
 
-  await ensureSchema(env);
+  await ensureSchema(db);
 
   const formData = await request.formData();
   const files = formData.getAll("photos").filter(item => item instanceof File);
@@ -44,7 +44,7 @@ export async function onRequestPost(context) {
     const createdAt = new Date().toISOString();
     const imageData = await fileToDataUrl(file);
 
-    await env.PHOTO_DB.prepare(
+    await db.prepare(
       `INSERT INTO photos (id, title, meta, image_data, size, type, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?)`
     ).bind(id, title, meta, imageData, file.size, file.type, createdAt).run();
@@ -60,7 +60,7 @@ export async function onRequestPost(context) {
     });
   }
 
-  const { results } = await env.PHOTO_DB.prepare(
+  const { results } = await db.prepare(
     `SELECT id, title, meta, image_data AS image, size, type, created_at AS createdAt
      FROM photos
      ORDER BY created_at DESC`
@@ -69,15 +69,16 @@ export async function onRequestPost(context) {
   return jsonResponse({ created, allPhotos: results || [] });
 }
 
-function checkBindings(env) {
-  if (!env.PHOTO_DB) {
-    return jsonResponse({ error: "D1 绑定 PHOTO_DB 尚未配置。" }, 500);
-  }
-  return null;
+function getPhotoDB(env) {
+  return env.PHOTO_DB || env.CESHI03 || env.ceshi03 || env.DB || null;
 }
 
-async function ensureSchema(env) {
-  await env.PHOTO_DB.prepare(
+function missingBindingResponse() {
+  return jsonResponse({ error: "D1 绑定未配置，请绑定 PHOTO_DB、CESHI03 或 DB。" }, 500);
+}
+
+async function ensureSchema(db) {
+  await db.prepare(
     `CREATE TABLE IF NOT EXISTS photos (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
