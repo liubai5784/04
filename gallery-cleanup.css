@@ -1,0 +1,4 @@
+/* Hide the old empty placeholder cards in the generated image gallery. */
+.gallery-grid > .photo-card.image-placeholder {
+  display: none;
+}
