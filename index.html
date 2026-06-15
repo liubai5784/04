@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="mobile-fix.css?v=1" />
   <link rel="stylesheet" href="gallery-cleanup.css?v=1" />
-  <link rel="stylesheet" href="guide-detail.css?v=1" />
 </head>
 <body>
   <div class="site-bg"></div>
@@ -15,22 +14,22 @@
     <a class="brand" href="#home">留白 / 作品空间</a>
     <nav class="nav" aria-label="主导航">
       <div class="nav-item">
-        <a class="nav-trigger" href="#games" data-guide-target="games">小游戏</a>
+        <a class="nav-trigger" href="javascript:void(0)">小游戏</a>
         <div class="nav-menu" id="gamesMenu"></div>
       </div>
       <div class="nav-item">
-        <a class="nav-trigger" href="#gallery" data-guide-target="gallery">照片</a>
+        <a class="nav-trigger" href="javascript:void(0)">照片</a>
         <div class="nav-menu">
           <a href="#gallery">作品墙</a>
           <a href="admin/index.html#upload">上传照片</a>
         </div>
       </div>
       <div class="nav-item">
-        <a class="nav-trigger" href="#tools" data-guide-target="tools">工具</a>
+        <a class="nav-trigger" href="javascript:void(0)">工具</a>
         <div class="nav-menu" id="toolsMenu"></div>
       </div>
       <div class="nav-item">
-        <a class="nav-trigger" href="admin/index.html#links" data-guide-target="admin">后台</a>
+        <a class="nav-trigger" href="javascript:void(0)">后台</a>
         <div class="nav-menu">
           <a href="admin/index.html#links">入口管理</a>
           <a href="admin/index.html#upload">上传照片</a>
@@ -46,14 +45,12 @@
         <h1>留白的作品空间</h1>
         <p class="hero-desc">这里收藏我做过的小项目：练习用的小游戏、顺手写的网页工具，还有一张张慢慢攒起来的生成图片。它像一个安静的作品架，先把灵感放好，再一点点长成更完整的空间。</p>
         <div class="hero-actions">
-          <a class="btn primary" href="#games" data-guide-target="games">查看小游戏</a>
-          <a class="btn ghost" href="#gallery" data-guide-target="gallery">进入相册</a>
+          <a class="btn primary" href="javascript:void(0)">查看小游戏</a>
+          <a class="btn ghost" href="javascript:void(0)">进入相册</a>
         </div>
       </div>
       <div class="hero-visual large" style="background-image: url('assets/images/hero.png'); background-size: cover; background-position: center;" role="img" aria-label="作品空间主视觉"></div>
     </section>
-
-    <section id="guideDetail" class="section-panel guide-detail is-hidden" aria-live="polite"></section>
 
     <section id="games" class="section-panel">
       <div class="section-title">
@@ -111,6 +108,5 @@
   <footer class="footer">© 2026 留白 / Personal Gallery Website</footer>
 
   <script src="script.js"></script>
-  <script src="guide-detail.js?v=1"></script>
 </body>
 </html>
