@@ -6,6 +6,7 @@
   <title>作品后台 / 留白的作品空间</title>
   <link rel="stylesheet" href="../style.css" />
   <link rel="stylesheet" href="../gallery-cleanup.css?v=1" />
+  <link rel="stylesheet" href="upload-preview.css?v=1" />
 </head>
 <body data-admin="true">
   <div class="site-bg"></div>
@@ -78,6 +79,9 @@
         <div class="upload-fields">
           <input id="photoTitle" type="text" placeholder="照片标题，例如：日出房间" />
           <input id="photoMeta" type="text" placeholder="分类/说明，例如：光影统一 / 房间" />
+        </div>
+        <div class="upload-preview" id="photoPreview" aria-live="polite">
+          <p>选择照片后会在这里预览。</p>
         </div>
         <div class="upload-actions">
           <button class="btn primary" type="submit">上传到照片墙</button>
