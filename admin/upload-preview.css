@@ -3,15 +3,20 @@
   overflow: hidden;
   min-height: 220px;
   padding: 18px;
-  transition: border-color .22s ease, background .22s ease;
+  background-image: var(--upload-preview-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: border-color .22s ease, background .22s ease, min-height .22s ease;
 }
 
 .upload-drop.has-preview {
-  place-content: stretch;
+  min-height: 280px;
+  place-content: center;
   padding: 0;
   border-style: solid;
-  border-color: rgba(85, 194, 239, 0.62);
-  background: rgba(1, 12, 22, 0.34);
+  border-color: rgba(85, 194, 239, 0.72);
+  background-color: rgba(1, 12, 22, 0.34);
 }
 
 .upload-drop.has-preview > span,
@@ -20,74 +25,16 @@
 }
 
 .upload-preview {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  min-height: 96px;
-  color: var(--muted);
-  pointer-events: none;
-}
-
-.upload-drop.has-preview .upload-preview {
-  min-height: 220px;
-}
-
-.upload-preview p {
-  margin: 0;
-  line-height: 1.7;
-}
-
-.upload-preview.has-preview {
-  position: relative;
-  overflow: hidden;
-  border-radius: 20px;
+  display: none;
 }
 
 .upload-preview-image {
-  display: block;
-  width: 100%;
-  height: 220px;
-  object-fit: cover;
-  object-position: center;
-  background: rgba(190, 231, 248, 0.05);
-}
-
-.upload-preview-caption {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 9px 11px;
-  border: 1px solid rgba(255,255,255,.18);
-  border-radius: 14px;
-  background: rgba(1, 12, 22, 0.66);
-  color: var(--text);
-  backdrop-filter: blur(10px);
-}
-
-.upload-preview-caption strong {
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  font-size: 12px;
-}
-
-.upload-preview-caption span {
-  flex: 0 0 auto;
-  color: var(--muted);
-  font-size: 11px;
+  display: none;
 }
 
 @media (max-width: 720px) {
   .upload-drop,
-  .upload-drop.has-preview .upload-preview,
-  .upload-preview-image {
-    min-height: 190px;
-    height: 190px;
+  .upload-drop.has-preview {
+    min-height: 220px;
   }
 }
