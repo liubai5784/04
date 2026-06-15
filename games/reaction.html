@@ -29,7 +29,9 @@
       overflow: hidden;
       cursor: pointer;
       user-select: none;
-      transition: transform .2s ease, background .25s ease, box-shadow .25s ease;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      transition: transform .2s ease, box-shadow .25s ease;
     }
 
     .reaction-stage:hover {
@@ -135,7 +137,7 @@
       <div class="section-title">
         <p class="eyebrow">Reaction Test</p>
         <h1>反应速度测试</h1>
-        <p>点开始后先等一会儿，画面变绿的瞬间点击测试区，看看你的反应有多快。</p>
+        <p>点开始后先等一会儿，画面变绿的瞬间按下测试区，看看你的反应有多快。</p>
       </div>
       <div class="hero-actions">
         <button class="btn primary" id="startReaction" type="button">开始测试</button>
@@ -168,7 +170,7 @@
             <ol class="reaction-list">
               <li>点击开始后不要急着点。</li>
               <li>等测试区变绿。</li>
-              <li>立刻点击测试区。</li>
+              <li>立刻按下测试区。</li>
               <li>太早点会判定抢跑。</li>
             </ol>
           </div>
@@ -210,6 +212,13 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(results.slice(-30)));
     }
 
+    function getEventTime(event) {
+      if (event && Number.isFinite(event.timeStamp) && event.timeStamp > 0 && event.timeStamp < 1e12) {
+        return event.timeStamp;
+      }
+      return performance.now();
+    }
+
     function setStage(nextState, title, desc) {
       state = nextState;
       stage.classList.toggle("is-waiting", nextState === "waiting");
@@ -227,20 +236,27 @@
       countEl.textContent = results.length;
     }
 
+    function armReadyState() {
+      readyAt = 0;
+      setStage("ready", "GO!", "现在按下！越快越好。");
+      tip.textContent = "快点！";
+      requestAnimationFrame(() => {
+        readyAt = performance.now();
+      });
+    }
+
     function startTest() {
       clearTimeout(timer);
       readyAt = 0;
-      const delay = 1200 + Math.floor(Math.random() * 2800);
+      const delay = 1600 + Math.floor(Math.random() * 2600);
       setStage("waiting", "WAIT", "先别点，等它变绿。红/橙状态点了算抢跑。");
       tip.textContent = "等待变绿……";
-      timer = setTimeout(() => {
-        readyAt = performance.now();
-        setStage("ready", "GO!", "现在点！越快越好。");
-        tip.textContent = "快点！";
-      }, delay);
+      timer = setTimeout(armReadyState, delay);
     }
 
-    function handleHit() {
+    function handleHit(event) {
+      const hitAt = getEventTime(event);
+
       if (state === "idle" || state === "early" || state === "done") {
         startTest();
         return;
@@ -254,7 +270,8 @@
       }
 
       if (state === "ready") {
-        const score = Math.round(performance.now() - readyAt);
+        const startTime = readyAt || performance.now();
+        const score = Math.max(0, Math.round(hitAt - startTime));
         results.push(score);
         saveResults();
         setStage("done", `${score}ms`, score < 220 ? "很快！点击这里再测一次。" : "还可以，再测一次试试。");
@@ -264,18 +281,21 @@
     }
 
     startButton.addEventListener("click", startTest);
-    stage.addEventListener("click", handleHit);
+    stage.addEventListener("pointerdown", event => {
+      event.preventDefault();
+      handleHit(event);
+    });
     stage.addEventListener("keydown", event => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        handleHit();
+        handleHit(event);
       }
     });
     document.addEventListener("keydown", event => {
-      if (event.key === " " && document.activeElement !== stage) {
-        event.preventDefault();
-        handleHit();
-      }
+      if (event.key !== " " || document.activeElement === stage) return;
+      if (event.target?.closest?.("button, a, input, textarea, select")) return;
+      event.preventDefault();
+      handleHit(event);
     });
     resetButton.addEventListener("click", () => {
       results = [];
