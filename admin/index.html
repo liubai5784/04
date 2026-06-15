@@ -6,7 +6,7 @@
   <title>作品后台 / 留白的作品空间</title>
   <link rel="stylesheet" href="../style.css" />
   <link rel="stylesheet" href="../gallery-cleanup.css?v=1" />
-  <link rel="stylesheet" href="upload-preview.css?v=2" />
+  <link rel="stylesheet" href="upload-preview.css?v=3" />
 </head>
 <body data-admin="true">
   <div class="site-bg"></div>
@@ -74,10 +74,7 @@
         <label class="upload-drop" id="photoDrop">
           <input id="photoInput" type="file" accept="image/*" />
           <span>选择照片</span>
-          <small>一次先上传一张，选中后会直接在这里预览</small>
-          <div class="upload-preview" id="photoPreview" aria-live="polite">
-            <p>选择照片后，图片会直接出现在这个框里。</p>
-          </div>
+          <div class="upload-preview" id="photoPreview" aria-live="polite"></div>
         </label>
         <div class="upload-fields">
           <input id="photoTitle" type="text" placeholder="照片标题，例如：日出房间" />
