@@ -13,21 +13,18 @@ function makeFileName(file, index) {
   return `${base}.jpg`;
 }
 
-function formatFileSize(bytes) {
-  if (!Number.isFinite(bytes)) return "未知大小";
-  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))}KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)}MB`;
-}
-
 function clearUploadPreview() {
   uploadPreviewUrls.forEach(url => URL.revokeObjectURL(url));
   uploadPreviewUrls = [];
 
   const drop = document.querySelector("#photoDrop");
   const preview = document.querySelector("#photoPreview");
-  if (drop) drop.classList.remove("has-preview");
+  if (drop) {
+    drop.classList.remove("has-preview");
+    drop.style.removeProperty("--upload-preview-image");
+  }
   if (preview) {
-    preview.innerHTML = "<p>选择照片后，图片会直接出现在这个框里。</p>";
+    preview.innerHTML = "";
     preview.classList.remove("has-preview");
   }
 }
@@ -35,27 +32,21 @@ function clearUploadPreview() {
 function renderUploadPreview(files) {
   const drop = document.querySelector("#photoDrop");
   const preview = document.querySelector("#photoPreview");
-  if (!preview) return;
 
   clearUploadPreview();
 
   const file = files.find(item => item.type.startsWith("image/"));
-  if (!file) {
-    preview.innerHTML = "<p>没有可预览的图片文件。</p>";
-    return;
-  }
+  if (!file || !drop) return;
 
   const url = URL.createObjectURL(file);
   uploadPreviewUrls.push(url);
-  preview.classList.add("has-preview");
-  if (drop) drop.classList.add("has-preview");
-  preview.innerHTML = `
-    <img class="upload-preview-image" src="${url}" alt="待上传图片" />
-    <div class="upload-preview-caption">
-      <strong>${file.name}</strong>
-      <span>${formatFileSize(file.size)}</span>
-    </div>
-  `;
+  drop.style.setProperty("--upload-preview-image", `url("${url}")`);
+  drop.classList.add("has-preview");
+
+  if (preview) {
+    preview.classList.add("has-preview");
+    preview.innerHTML = `<img class="upload-preview-image" src="${url}" alt="" />`;
+  }
 }
 
 async function compressPhoto(file, index) {
@@ -116,7 +107,7 @@ async function uploadPhotos(event) {
   }
 
   submitButton.disabled = true;
-  setUploadTip("正在压缩并上传这张照片...");
+  setUploadTip("正在上传...");
 
   try {
     const formData = new FormData();
@@ -141,7 +132,7 @@ async function uploadPhotos(event) {
     renderCounts();
     input.value = "";
     clearUploadPreview();
-    setUploadTip("上传成功：这张照片已加入照片墙。");
+    setUploadTip("上传成功。");
   } catch (error) {
     console.error(error);
     setUploadTip(`上传失败：${error.message}`);
@@ -158,8 +149,7 @@ function bindPhotoUploadForm() {
   input?.addEventListener("change", () => {
     const files = Array.from(input.files || []);
     renderUploadPreview(files);
-    if (files.length > 1) setUploadTip("现在一次先传一张，我会使用你选中的第一张图片。");
-    else if (files.length) setUploadTip("已选择 1 张照片，可以确认预览后上传。");
+    if (files.length) setUploadTip("可以上传了。");
   });
 
   form.addEventListener("submit", uploadPhotos);
