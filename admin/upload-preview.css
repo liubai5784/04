@@ -1,11 +1,35 @@
+.upload-drop {
+  position: relative;
+  overflow: hidden;
+  min-height: 220px;
+  padding: 18px;
+  transition: border-color .22s ease, background .22s ease;
+}
+
+.upload-drop.has-preview {
+  place-content: stretch;
+  padding: 0;
+  border-style: solid;
+  border-color: rgba(85, 194, 239, 0.62);
+  background: rgba(1, 12, 22, 0.34);
+}
+
+.upload-drop.has-preview > span,
+.upload-drop.has-preview > small {
+  display: none;
+}
+
 .upload-preview {
-  grid-column: 1 / -1;
-  min-height: 88px;
-  padding: 14px;
-  border: 1px solid rgba(85, 194, 239, 0.22);
-  border-radius: 22px;
-  background: rgba(1, 12, 22, 0.26);
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 96px;
   color: var(--muted);
+  pointer-events: none;
+}
+
+.upload-drop.has-preview .upload-preview {
+  min-height: 220px;
 }
 
 .upload-preview p {
@@ -14,71 +38,56 @@
 }
 
 .upload-preview.has-preview {
-  background: rgba(190, 231, 248, 0.055);
-}
-
-.upload-preview-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-}
-
-.upload-preview-head strong {
-  color: var(--text);
-}
-
-.upload-preview-head span {
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.upload-preview-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 12px;
-}
-
-.upload-preview-item {
-  margin: 0;
+  position: relative;
   overflow: hidden;
-  border: 1px solid rgba(108, 181, 215, 0.18);
-  border-radius: 18px;
-  background: rgba(1, 12, 22, 0.32);
+  border-radius: 20px;
 }
 
-.upload-preview-item img {
+.upload-preview-image {
   display: block;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  height: 220px;
   object-fit: cover;
   object-position: center;
   background: rgba(190, 231, 248, 0.05);
 }
 
-.upload-preview-item figcaption {
-  display: grid;
-  gap: 3px;
-  padding: 9px 10px 10px;
+.upload-preview-caption {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 11px;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 14px;
+  background: rgba(1, 12, 22, 0.66);
+  color: var(--text);
+  backdrop-filter: blur(10px);
 }
 
-.upload-preview-item figcaption span {
+.upload-preview-caption strong {
+  min-width: 0;
   overflow: hidden;
-  color: var(--text);
-  font-size: 12px;
   white-space: nowrap;
   text-overflow: ellipsis;
+  font-size: 12px;
 }
 
-.upload-preview-item figcaption small {
+.upload-preview-caption span {
+  flex: 0 0 auto;
   color: var(--muted);
   font-size: 11px;
 }
 
 @media (max-width: 720px) {
-  .upload-preview-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .upload-drop,
+  .upload-drop.has-preview .upload-preview,
+  .upload-preview-image {
+    min-height: 190px;
+    height: 190px;
   }
 }
