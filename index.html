@@ -7,12 +7,16 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="mobile-fix.css?v=1" />
   <link rel="stylesheet" href="gallery-cleanup.css?v=1" />
+  <link rel="stylesheet" href="status-panel.css?v=1" />
 </head>
 <body>
   <div class="site-bg"></div>
   <header class="topbar">
     <a class="brand" href="#home">留白 / 作品空间</a>
     <nav class="nav" aria-label="主导航">
+      <div class="nav-item">
+        <a class="nav-trigger nav-single" href="#status-panel">状态面板</a>
+      </div>
       <div class="nav-item">
         <a class="nav-trigger" href="javascript:void(0)">小游戏</a>
         <div class="nav-menu" id="gamesMenu"></div>
@@ -45,11 +49,66 @@
         <h1>留白的作品空间</h1>
         <p class="hero-desc">这里收藏我做过的小项目：练习用的小游戏、顺手写的网页工具，还有一张张慢慢攒起来的生成图片。它像一个安静的作品架，先把灵感放好，再一点点长成更完整的空间。</p>
         <div class="hero-actions">
-          <a class="btn primary" href="javascript:void(0)">查看小游戏</a>
-          <a class="btn ghost" href="javascript:void(0)">进入相册</a>
+          <a class="btn primary" href="#games">查看小游戏</a>
+          <a class="btn ghost" href="#gallery">进入相册</a>
         </div>
       </div>
       <div class="hero-visual large" style="background-image: url('assets/images/hero.png'); background-size: cover; background-position: center;" role="img" aria-label="作品空间主视觉"></div>
+    </section>
+
+    <section id="status-panel" class="section-panel status-panel" aria-labelledby="statusPanelTitle">
+      <div class="section-title status-title-row">
+        <div>
+          <p class="eyebrow">Personal Status</p>
+          <h2 id="statusPanelTitle">个人状态面板</h2>
+          <p>每天随机生成一个像游戏角色面板一样的状态，也可以手动刷新，适合放在首页当一个有点好玩的入口。</p>
+        </div>
+        <button class="btn ghost status-refresh" type="button" id="refreshStatus">刷新状态</button>
+      </div>
+
+      <div class="status-layout">
+        <article class="status-main-card">
+          <div class="status-avatar" aria-hidden="true">留白</div>
+          <p class="status-kicker">当前状态</p>
+          <h3 id="statusHeadline">半清醒但还能动</h3>
+          <p id="statusSummary">系统正在读取今日精神状态……</p>
+          <div class="status-date" id="statusDate">今日状态生成中</div>
+        </article>
+
+        <div class="status-meter-grid" aria-label="状态数值">
+          <article class="status-meter" data-status-meter="energy">
+            <div class="meter-head"><span>精力</span><strong>--%</strong></div>
+            <div class="meter-track"><span></span></div>
+          </article>
+          <article class="status-meter" data-status-meter="study">
+            <div class="meter-head"><span>学习欲望</span><strong>--%</strong></div>
+            <div class="meter-track"><span></span></div>
+          </article>
+          <article class="status-meter" data-status-meter="slack">
+            <div class="meter-head"><span>摸鱼欲望</span><strong>--%</strong></div>
+            <div class="meter-track"><span></span></div>
+          </article>
+          <article class="status-meter" data-status-meter="ddl">
+            <div class="meter-head"><span>DDL 压力</span><strong>--%</strong></div>
+            <div class="meter-track"><span></span></div>
+          </article>
+        </div>
+
+        <div class="status-note-grid">
+          <article class="status-note">
+            <span>今日技能</span>
+            <strong id="statusSkill">临时抱佛脚</strong>
+          </article>
+          <article class="status-note">
+            <span>今日 Debuff</span>
+            <strong id="statusDebuff">打开文档困难</strong>
+          </article>
+          <article class="status-note wide">
+            <span>今日建议</span>
+            <strong id="statusAdvice">先做五分钟，剩下的交给惯性。</strong>
+          </article>
+        </div>
+      </div>
     </section>
 
     <section id="games" class="section-panel">
@@ -108,5 +167,6 @@
   <footer class="footer">© 2026 留白 / Personal Gallery Website</footer>
 
   <script src="script.js?v=20260615-reaction"></script>
+  <script src="status-panel.js?v=1"></script>
 </body>
 </html>
