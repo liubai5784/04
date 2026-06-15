@@ -1,7 +1,7 @@
 const isAdminPage = document.body.dataset.admin === "true";
 const CONFIG_STORAGE_KEY = "liubai-gallery-config";
 const CONFIG_VERSION_KEY = "liubai-gallery-config-version";
-const CONFIG_VERSION = "2026-06-11-qingtankuaipao-v1";
+const CONFIG_VERSION = "2026-06-15-reaction-v1";
 
 const qingtanGame = {
   title: "轻坦快跑",
@@ -19,6 +19,14 @@ const puzzleGame = {
   url: "games/puzzle.html"
 };
 
+const reactionGame = {
+  title: "反应速度测试",
+  desc: "等画面变绿的一瞬间点击，记录本次、最好和平均反应速度。",
+  cover: "",
+  tags: ["Reaction", "手速", "小游戏"],
+  url: "games/reaction.html"
+};
+
 const defaultTools = [
   { name: "GPT 跳转", desc: "快速打开 ChatGPT，继续和我聊天。", url: "https://chatgpt.com/" },
   { name: "Cloudflare 跳转", desc: "打开 Cloudflare 控制台，管理 Pages 部署和 D1 数据库。", url: "https://dash.cloudflare.com/" },
@@ -29,6 +37,7 @@ const defaultConfig = {
   games: [
     qingtanGame,
     puzzleGame,
+    reactionGame,
     { title: "答题练习小程序", desc: "适合放概论课、结构力学或英语练习题，后续可以接入你已有的网页小程序。", cover: "", tags: ["Quiz", "学习", "网页"], url: "#" },
     { title: "错题强化模式", desc: "预留给只练错题、答题卡和进度缓存等功能入口。", cover: "", tags: ["错题", "缓存", "进度"], url: "#" },
     { title: "互动小游戏占位", desc: "之后可以把你做过的小游戏链接放到这里，形成合集入口。", cover: "", tags: ["Game", "互动", "作品"], url: "#" }
@@ -86,6 +95,7 @@ function normalizeConfig(config) {
     tools: Array.isArray(config?.tools) ? config.tools : defaultConfig.tools
   };
 
+  ensureGame(normalized, reactionGame);
   ensureGame(normalized, puzzleGame);
   ensureGame(normalized, qingtanGame);
 
