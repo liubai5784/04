@@ -23,51 +23,39 @@ function clearUploadPreview() {
   uploadPreviewUrls.forEach(url => URL.revokeObjectURL(url));
   uploadPreviewUrls = [];
 
+  const drop = document.querySelector("#photoDrop");
   const preview = document.querySelector("#photoPreview");
+  if (drop) drop.classList.remove("has-preview");
   if (preview) {
-    preview.innerHTML = "<p>选择照片后会在这里预览。</p>";
+    preview.innerHTML = "<p>选择照片后，图片会直接出现在这个框里。</p>";
     preview.classList.remove("has-preview");
   }
 }
 
 function renderUploadPreview(files) {
+  const drop = document.querySelector("#photoDrop");
   const preview = document.querySelector("#photoPreview");
   if (!preview) return;
 
   clearUploadPreview();
 
-  const imageFiles = files.filter(file => file.type.startsWith("image/"));
-  if (!imageFiles.length) {
+  const file = files.find(item => item.type.startsWith("image/"));
+  if (!file) {
     preview.innerHTML = "<p>没有可预览的图片文件。</p>";
     return;
   }
 
-  const visibleFiles = imageFiles.slice(0, 12);
+  const url = URL.createObjectURL(file);
+  uploadPreviewUrls.push(url);
   preview.classList.add("has-preview");
+  if (drop) drop.classList.add("has-preview");
   preview.innerHTML = `
-    <div class="upload-preview-head">
-      <strong>待上传预览</strong>
-      <span>${imageFiles.length} 张图片${imageFiles.length > visibleFiles.length ? `，先显示前 ${visibleFiles.length} 张` : ""}</span>
+    <img class="upload-preview-image" src="${url}" alt="待上传图片" />
+    <div class="upload-preview-caption">
+      <strong>${file.name}</strong>
+      <span>${formatFileSize(file.size)}</span>
     </div>
-    <div class="upload-preview-grid"></div>
   `;
-
-  const grid = preview.querySelector(".upload-preview-grid");
-  visibleFiles.forEach((file, index) => {
-    const url = URL.createObjectURL(file);
-    uploadPreviewUrls.push(url);
-
-    const item = document.createElement("figure");
-    item.className = "upload-preview-item";
-    item.innerHTML = `
-      <img src="${url}" alt="待上传图片 ${index + 1}" loading="lazy" />
-      <figcaption>
-        <span>${file.name}</span>
-        <small>${formatFileSize(file.size)}</small>
-      </figcaption>
-    `;
-    grid.appendChild(item);
-  });
 }
 
 async function compressPhoto(file, index) {
@@ -120,25 +108,23 @@ async function uploadPhotos(event) {
   const submitButton = form.querySelector('button[type="submit"]');
   const title = form.querySelector("#photoTitle")?.value.trim() || "上传照片";
   const meta = form.querySelector("#photoMeta")?.value.trim() || "网页端上传";
-  const files = Array.from(input?.files || []);
+  const file = Array.from(input?.files || []).find(item => item.type.startsWith("image/"));
 
-  if (!files.length) {
+  if (!file) {
     setUploadTip("请先选择要上传的照片。");
     return;
   }
 
   submitButton.disabled = true;
-  setUploadTip(`正在压缩并上传 ${files.length} 张照片...`);
+  setUploadTip("正在压缩并上传这张照片...");
 
   try {
     const formData = new FormData();
     formData.set("title", title);
     formData.set("meta", meta);
 
-    for (let i = 0; i < files.length; i += 1) {
-      const compressed = await compressPhoto(files[i], i);
-      if (compressed) formData.append("photos", compressed, compressed.name);
-    }
+    const compressed = await compressPhoto(file, 0);
+    if (compressed) formData.append("photos", compressed, compressed.name);
 
     const response = await fetch("/api/photos", {
       method: "POST",
@@ -155,7 +141,7 @@ async function uploadPhotos(event) {
     renderCounts();
     input.value = "";
     clearUploadPreview();
-    setUploadTip(`上传成功：${data.created?.length || files.length} 张照片已加入照片墙。`);
+    setUploadTip("上传成功：这张照片已加入照片墙。");
   } catch (error) {
     console.error(error);
     setUploadTip(`上传失败：${error.message}`);
@@ -172,7 +158,8 @@ function bindPhotoUploadForm() {
   input?.addEventListener("change", () => {
     const files = Array.from(input.files || []);
     renderUploadPreview(files);
-    if (files.length) setUploadTip(`已选择 ${files.length} 张照片，可确认预览后上传。`);
+    if (files.length > 1) setUploadTip("现在一次先传一张，我会使用你选中的第一张图片。");
+    else if (files.length) setUploadTip("已选择 1 张照片，可以确认预览后上传。");
   });
 
   form.addEventListener("submit", uploadPhotos);
