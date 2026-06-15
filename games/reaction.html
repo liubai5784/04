@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>反应速度测试 / 留白的作品空间</title>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .reaction-hero .hero-actions {
+      flex-wrap: wrap;
+    }
+
+    .reaction-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(260px, .6fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .reaction-stage {
+      position: relative;
+      min-height: 380px;
+      border-radius: 30px;
+      border: 1px solid rgba(255, 255, 255, .12);
+      background:
+        radial-gradient(circle at 30% 20%, rgba(255, 181, 214, .18), transparent 34%),
+        linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      box-shadow: 0 22px 58px rgba(0, 0, 0, .22);
+      overflow: hidden;
+      cursor: pointer;
+      user-select: none;
+      transition: transform .2s ease, background .25s ease, box-shadow .25s ease;
+    }
+
+    .reaction-stage:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 26px 68px rgba(0, 0, 0, .26);
+    }
+
+    .reaction-stage.is-waiting {
+      background:
+        radial-gradient(circle at 70% 20%, rgba(255, 187, 118, .28), transparent 38%),
+        linear-gradient(135deg, rgba(255, 211, 139, .22), rgba(255,255,255,.04));
+    }
+
+    .reaction-stage.is-ready {
+      background:
+        radial-gradient(circle at 50% 35%, rgba(188, 255, 216, .42), transparent 38%),
+        linear-gradient(135deg, rgba(80, 232, 154, .36), rgba(255,255,255,.06));
+    }
+
+    .reaction-stage.is-early {
+      background:
+        radial-gradient(circle at 50% 35%, rgba(255, 128, 146, .36), transparent 40%),
+        linear-gradient(135deg, rgba(255, 94, 122, .22), rgba(255,255,255,.04));
+    }
+
+    .reaction-inner {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 32px;
+      text-align: center;
+    }
+
+    .reaction-message {
+      display: grid;
+      gap: 14px;
+      justify-items: center;
+    }
+
+    .reaction-message strong {
+      font-size: clamp(34px, 7vw, 72px);
+      line-height: 1;
+      letter-spacing: -0.04em;
+      color: rgba(255,255,255,.96);
+      text-shadow: 0 18px 42px rgba(0,0,0,.22);
+    }
+
+    .reaction-message span {
+      max-width: 520px;
+      font-size: 16px;
+      line-height: 1.8;
+      color: rgba(236, 247, 255, .8);
+    }
+
+    .reaction-result {
+      font-size: clamp(48px, 10vw, 110px);
+      font-weight: 900;
+      line-height: .9;
+      color: #fff;
+      text-shadow: 0 18px 54px rgba(0,0,0,.28);
+    }
+
+    .reaction-side {
+      display: grid;
+      gap: 16px;
+    }
+
+    .reaction-side .stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .reaction-list {
+      margin: 0;
+      padding-left: 20px;
+      color: rgba(232, 246, 255, .74);
+      line-height: 1.9;
+    }
+
+    @media (max-width: 860px) {
+      .reaction-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .reaction-stage {
+        min-height: 320px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="site-bg"></div>
+  <header class="topbar">
+    <a class="brand" href="../index.html#home">留白 / 作品空间</a>
+    <nav class="nav" aria-label="反应速度测试导航">
+      <a class="nav-trigger" href="../index.html#games">返回小游戏</a>
+      <a class="nav-trigger" href="../index.html#gallery">照片墙</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="section-panel reaction-hero">
+      <div class="section-title">
+        <p class="eyebrow">Reaction Test</p>
+        <h1>反应速度测试</h1>
+        <p>点开始后先等一会儿，画面变绿的瞬间点击测试区，看看你的反应有多快。</p>
+      </div>
+      <div class="hero-actions">
+        <button class="btn primary" id="startReaction" type="button">开始测试</button>
+        <button class="btn ghost" id="resetReactionStats" type="button">清空记录</button>
+      </div>
+      <p class="upload-tip" id="reactionTip">准备好后点击开始，或者按空格开始。</p>
+    </section>
+
+    <section class="section-panel reaction-layout">
+      <div class="reaction-stage" id="reactionStage" role="button" tabindex="0" aria-label="反应速度测试区域">
+        <div class="reaction-inner">
+          <div class="reaction-message" id="reactionMessage">
+            <strong>READY</strong>
+            <span>点击“开始测试”，等画面变绿再点这里。</span>
+          </div>
+        </div>
+      </div>
+
+      <aside class="reaction-side">
+        <div class="stats-grid">
+          <article><strong id="lastReaction">--</strong><span>本次成绩</span></article>
+          <article><strong id="bestReaction">--</strong><span>最好成绩</span></article>
+          <article><strong id="avgReaction">--</strong><span>平均成绩</span></article>
+          <article><strong id="tryCount">0</strong><span>有效次数</span></article>
+        </div>
+        <div class="tool-item">
+          <div class="tool-index">?</div>
+          <div>
+            <h3>玩法</h3>
+            <ol class="reaction-list">
+              <li>点击开始后不要急着点。</li>
+              <li>等测试区变绿。</li>
+              <li>立刻点击测试区。</li>
+              <li>太早点会判定抢跑。</li>
+            </ol>
+          </div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <footer class="footer">© 2026 留白 / Reaction Test</footer>
+
+  <script>
+    const stage = document.querySelector("#reactionStage");
+    const message = document.querySelector("#reactionMessage");
+    const startButton = document.querySelector("#startReaction");
+    const resetButton = document.querySelector("#resetReactionStats");
+    const tip = document.querySelector("#reactionTip");
+    const lastEl = document.querySelector("#lastReaction");
+    const bestEl = document.querySelector("#bestReaction");
+    const avgEl = document.querySelector("#avgReaction");
+    const countEl = document.querySelector("#tryCount");
+
+    const STORAGE_KEY = "liubai-reaction-results";
+    let state = "idle";
+    let timer = null;
+    let readyAt = 0;
+    let results = readResults();
+
+    function readResults() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed.filter(Number.isFinite) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveResults() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(results.slice(-30)));
+    }
+
+    function setStage(nextState, title, desc) {
+      state = nextState;
+      stage.classList.toggle("is-waiting", nextState === "waiting");
+      stage.classList.toggle("is-ready", nextState === "ready");
+      stage.classList.toggle("is-early", nextState === "early");
+      message.innerHTML = `<strong>${title}</strong><span>${desc}</span>`;
+    }
+
+    function renderStats(last = null) {
+      const best = results.length ? Math.min(...results) : null;
+      const avg = results.length ? Math.round(results.reduce((sum, item) => sum + item, 0) / results.length) : null;
+      lastEl.textContent = last == null ? "--" : `${last}ms`;
+      bestEl.textContent = best == null ? "--" : `${best}ms`;
+      avgEl.textContent = avg == null ? "--" : `${avg}ms`;
+      countEl.textContent = results.length;
+    }
+
+    function startTest() {
+      clearTimeout(timer);
+      readyAt = 0;
+      const delay = 1200 + Math.floor(Math.random() * 2800);
+      setStage("waiting", "WAIT", "先别点，等它变绿。红/橙状态点了算抢跑。");
+      tip.textContent = "等待变绿……";
+      timer = setTimeout(() => {
+        readyAt = performance.now();
+        setStage("ready", "GO!", "现在点！越快越好。");
+        tip.textContent = "快点！";
+      }, delay);
+    }
+
+    function handleHit() {
+      if (state === "idle" || state === "early" || state === "done") {
+        startTest();
+        return;
+      }
+
+      if (state === "waiting") {
+        clearTimeout(timer);
+        setStage("early", "太早了", "还没变绿就点了，再来一次。点击这里重新开始。");
+        tip.textContent = "抢跑了，等变绿再点。";
+        return;
+      }
+
+      if (state === "ready") {
+        const score = Math.round(performance.now() - readyAt);
+        results.push(score);
+        saveResults();
+        setStage("done", `${score}ms`, score < 220 ? "很快！点击这里再测一次。" : "还可以，再测一次试试。");
+        tip.textContent = `本次反应速度：${score}ms。`;
+        renderStats(score);
+      }
+    }
+
+    startButton.addEventListener("click", startTest);
+    stage.addEventListener("click", handleHit);
+    stage.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        handleHit();
+      }
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === " " && document.activeElement !== stage) {
+        event.preventDefault();
+        handleHit();
+      }
+    });
+    resetButton.addEventListener("click", () => {
+      results = [];
+      saveResults();
+      renderStats();
+      setStage("idle", "READY", "点击“开始测试”，等画面变绿再点这里。");
+      tip.textContent = "记录已清空。";
+    });
+
+    renderStats();
+  </script>
+</body>
+</html>
