@@ -3,6 +3,7 @@ const preview = document.querySelector("#puzzlePreview");
 const input = document.querySelector("#puzzleImageInput");
 const shuffleButton = document.querySelector("#shufflePuzzle");
 const resetButton = document.querySelector("#resetPuzzle");
+const useGalleryButton = document.querySelector("#useGalleryPhoto");
 const tip = document.querySelector("#puzzleTip");
 const moveCountEl = document.querySelector("#moveCount");
 const statusEl = document.querySelector("#puzzleStatus");
@@ -15,10 +16,13 @@ let cols = 3;
 let rows = 3;
 let imageUrl = defaultImage;
 let imageRatio = 16 / 9;
+let imageLabel = "默认主视觉图";
 let tiles = [];
 let selectedIndex = null;
 let moveCount = 0;
 let dragIndex = null;
+let galleryPhotos = [];
+let galleryIndex = -1;
 
 function clampGridValue(value) {
   const number = Number(value);
@@ -46,12 +50,53 @@ function loadImageRatio(src) {
   });
 }
 
-async function setImage(src) {
+function getPhotoImage(item) {
+  return String(item?.image || item?.imageUrl || item?.image_url || item?.url || item?.src || "").trim();
+}
+
+async function loadGalleryPhotos() {
+  try {
+    const response = await fetch("/api/photos", { cache: "no-store" });
+    if (!response.ok) throw new Error("照片墙接口不可用");
+    const data = await response.json();
+    const list = Array.isArray(data) ? data : (data.allPhotos || data.photos || []);
+    galleryPhotos = list
+      .map(item => ({
+        title: String(item?.title || "照片墙图片").trim() || "照片墙图片",
+        image: getPhotoImage(item)
+      }))
+      .filter(item => item.image);
+  } catch (error) {
+    console.warn("读取照片墙图片失败：", error);
+    galleryPhotos = [];
+  }
+
+  if (useGalleryButton) {
+    useGalleryButton.disabled = galleryPhotos.length === 0;
+    useGalleryButton.textContent = galleryPhotos.length ? "换一张照片墙图片" : "照片墙暂无图片";
+  }
+
+  return galleryPhotos;
+}
+
+async function setImage(src, label = "照片") {
   imageUrl = src;
+  imageLabel = label;
   imageRatio = await loadImageRatio(src);
   board.style.aspectRatio = String(imageRatio);
   preview.style.aspectRatio = String(imageRatio);
   shuffleTiles();
+}
+
+function useGalleryPhoto(step = 1) {
+  if (!galleryPhotos.length) {
+    tip.textContent = "照片墙暂时没有可用图片，可以先选择本地图片。";
+    return;
+  }
+
+  galleryIndex = (galleryIndex + step + galleryPhotos.length) % galleryPhotos.length;
+  const photo = galleryPhotos[galleryIndex];
+  setImage(photo.image, photo.title || "照片墙图片");
 }
 
 function shuffleTiles() {
@@ -93,7 +138,7 @@ function renderPuzzle() {
   statusEl.textContent = isSolved() ? "完成" : "未完成";
   tip.textContent = isSolved()
     ? "拼图完成！可以换一张图继续玩。"
-    : `当前切块：横向 ${cols} 块，纵向 ${rows} 块。可以点击交换，也可以拖动互换。`;
+    : `当前图片：${imageLabel}。横向 ${cols} 块，纵向 ${rows} 块。`;
 
   board.querySelectorAll(".puzzle-tile").forEach(button => {
     button.addEventListener("click", () => handleTileClick(Number(button.dataset.index)));
@@ -161,8 +206,10 @@ input.addEventListener("change", () => {
   }
 
   if (imageUrl.startsWith("blob:")) URL.revokeObjectURL(imageUrl);
-  setImage(URL.createObjectURL(file));
+  setImage(URL.createObjectURL(file), file.name || "本地图片");
 });
+
+useGalleryButton?.addEventListener("click", () => useGalleryPhoto(1));
 
 applyGridButton.addEventListener("click", () => {
   syncGridFromInputs();
@@ -180,8 +227,18 @@ rowsInput.addEventListener("change", () => {
 shuffleButton.addEventListener("click", shuffleTiles);
 resetButton.addEventListener("click", () => {
   if (imageUrl.startsWith("blob:")) URL.revokeObjectURL(imageUrl);
-  setImage(defaultImage);
+  setImage(defaultImage, "默认主视觉图");
 });
 
-syncGridFromInputs();
-setImage(defaultImage);
+async function initPuzzle() {
+  syncGridFromInputs();
+  const photos = await loadGalleryPhotos();
+  if (photos.length) {
+    galleryIndex = 0;
+    await setImage(photos[0].image, photos[0].title || "照片墙图片");
+  } else {
+    await setImage(defaultImage, "默认主视觉图");
+  }
+}
+
+initPuzzle();
